@@ -1,0 +1,10 @@
+.terraform/
+node_modules/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+tfplan
+fruit-api-*.zip
+# remove after finalizing:
+Architecture.md
+docs/
