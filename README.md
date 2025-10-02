@@ -55,7 +55,7 @@ See [`Architecture.md`](./Architecture.md) for diagrams and details.
 │   └── package.json
 ├── docs
 │   ├── ADRs.md                         # Architecture Decision Records
-│   └── sample-architecture-diagram.png # Architecture diagram
+│   └── architecture-diagram.png # Architecture diagram
 ├── infrastructure
 │   ├── backend
 │   │   └── global                      # configuration for each environment
