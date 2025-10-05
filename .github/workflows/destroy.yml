@@ -71,6 +71,8 @@ jobs:
           encrypt        = true
           EOF
 
+          echo "Table=$TABLE" >> $GITHUB_ENV
+
       # 4. Install Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -81,6 +83,10 @@ jobs:
       - name: Init Terraform
         run: terraform init -backend-config=${{ env.ENVIRONMENT }}.hcl
 
-      # 6. Destroy resources
+      # 6. Disable DynamoDB deletion protection (if enabled)
+      - name: Disable specific DynamoDB deletion protection
+        run: aws dynamodb update-table --table-name "$TABLE" --deletion-protection-enabled false --region ${{ github.event.inputs.region }}
+
+      # 7. Destroy resources
       - name: Destroy
         run: terraform destroy -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve
