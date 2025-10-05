@@ -45,7 +45,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 2. Configure AWS credentials using github environment secrets
+      # 2. Package Lambda code (needed even for destroy)
+      - name: Package Lambda Code
+        working-directory: ./
+        run: |
+          make -C app/handlers/fruit-api-GET package
+          make -C app/handlers/fruit-api-PUT package
+          make -C app/handlers/fruit-api-PATCH package
+          make -C app/handlers/fruit-api-DELETE package
+
+      # 3. Configure AWS credentials using github environment secrets
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -53,7 +62,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      # 3. Fetch backend config from SSM
+      # 4. Fetch backend config from SSM
       # - Retrieves global S3/DynamoDB state backend
       # - Creates backend config file for terraform init
       - name: Fetch Backend Config from SSM
@@ -71,16 +80,16 @@ jobs:
           encrypt        = true
           EOF
 
-      # 4. Install Terraform
+      # 5. Install Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.12.2" # Pin to specific version
 
-      # 5. Initialize Terraform locally on github runner
+      # 6. Initialize Terraform locally on github runner
       - name: Init Terraform
         run: terraform init -backend-config=${{ env.ENVIRONMENT }}.hcl
 
-      # 6. Destroy resources
+      # 7. Destroy resources
       - name: Destroy
         run: terraform apply -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve
