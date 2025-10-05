@@ -26,9 +26,9 @@ jobs:
     runs-on: ubuntu-latest
 
     # necessary to set environment per branch
-    environment: ${{ github.ref == 'refs/heads/main' && 'dev' ||
-      github.ref == 'refs/heads/test' && 'test' ||
-      github.ref == 'refs/heads/prod' && 'prod' }}
+    # environment: ${{ github.ref == 'refs/heads/main' && 'dev' ||
+    #   github.ref == 'refs/heads/test' && 'test' ||
+    #   github.ref == 'refs/heads/prod' && 'prod' }}
     env:
       ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'dev' ||
         github.ref == 'refs/heads/test' && 'test' ||
@@ -65,15 +65,15 @@ jobs:
           terraform_version: "1.12.2" # Pin to specific version
 
       - name: Terraform fmt check
-        working-directory: infrastructure/environments/${{ env.ENVIRONMENT  }}
+        working-directory: infrastructure
         run: terraform fmt -check -recursive # enforce terraform formatting standards
 
       - name: Terraform Init # for validation
-        working-directory: infrastructure/environments/${{ env.ENVIRONMENT }}
+        working-directory: infrastructure
         run: terraform init -backend=false # doesn't affect state by skipping remote state; only validates modules/providers
 
       - name: Terraform validate
-        working-directory: infrastructure/environments/${{ env.ENVIRONMENT  }}
+        working-directory: infrastructure
         run: terraform validate # validate terraform syntax
 
   # Second job: Terraform Plan (on PRs)
@@ -83,9 +83,9 @@ jobs:
     if: github.event_name == 'pull_request' # only run on PRs
 
     # necessary to set environment per branch
-    environment: ${{ github.ref == 'refs/heads/main' && 'dev' ||
-      github.ref == 'refs/heads/test' && 'test' ||
-      github.ref == 'refs/heads/prod' && 'prod' }}
+    # environment: ${{ github.ref == 'refs/heads/main' && 'dev' ||
+    #   github.ref == 'refs/heads/test' && 'test' ||
+    #   github.ref == 'refs/heads/prod' && 'prod' }}
     env:
       ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'dev' ||
         github.ref == 'refs/heads/test' && 'test' ||
@@ -93,7 +93,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: infrastructure/environments/${{ env.ENVIRONMENT }} # Keep runs scoped to environment code
+        working-directory: infrastructure # Keep runs scoped to environment code
 
     steps:
       # Checkout the repo
@@ -159,9 +159,9 @@ jobs:
     if: github.event_name == 'push' # only run on pushes
 
     # necessary to set environment per branch
-    environment: ${{ github.ref == 'refs/heads/main' && 'dev' ||
-      github.ref == 'refs/heads/test' && 'test' ||
-      github.ref == 'refs/heads/prod' && 'prod' }}
+    # environment: ${{ github.ref == 'refs/heads/main' && 'dev' ||
+    #   github.ref == 'refs/heads/test' && 'test' ||
+    #   github.ref == 'refs/heads/prod' && 'prod' }}
     env:
       ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'dev' ||
         github.ref == 'refs/heads/test' && 'test' ||
@@ -169,7 +169,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: infrastructure/environments/${{ env.ENVIRONMENT }} # Keep runs scoped to environment code
+        working-directory: infrastructure # Keep runs scoped to environment code
 
     steps:
       # Checkout the repo
