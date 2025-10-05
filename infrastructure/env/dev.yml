@@ -3,7 +3,6 @@ environment: "dev"
 project_name: "fruit-api-project"
 owner: "Doug"
 
-state_bucket_name: "fruit-api-state-bucket"
 lambda_code_bucket_name: "fruit-api-lambda-code-bucket"
 dynamodb_table_name: "fruit-api-table"
 

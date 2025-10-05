@@ -6,7 +6,7 @@ locals {
 data "terraform_remote_state" "global" {
   backend = "s3"
   config = {
-    bucket = local.config.state_bucket_name
+    bucket = var.state_bucket_name
     key    = "global/terraform.tfstate"
     region = var.region
   }
