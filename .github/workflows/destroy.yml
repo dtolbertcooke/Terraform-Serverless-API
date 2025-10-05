@@ -92,4 +92,4 @@ jobs:
 
       # 7. Destroy resources
       - name: Destroy
-        run: terraform apply -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve
+        run: terraform destroy -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve
