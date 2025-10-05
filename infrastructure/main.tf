@@ -33,7 +33,7 @@ module "lambda_exec_role" {
   source               = "./resources/iam/lambda-exec-role"
   environment          = local.config.environment
   region               = local.config.region
-  aws_account_id       = local.config.aws_account_id
+  aws_account_id       = var.aws_account_id
   dynamodb_table_name  = local.config.dynamodb_table_name
   GET_function_name    = module.lambda_GET_function.lambda_function_name
   PUT_function_name    = module.lambda_PUT_function.lambda_function_name
