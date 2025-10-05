@@ -8,7 +8,7 @@ data "terraform_remote_state" "global" {
   config = {
     bucket = local.config.state_bucket_name
     key    = "global/terraform.tfstate"
-    region = local.config.region
+    region = var.region
   }
 }
 
@@ -32,7 +32,7 @@ module "app_db" {
 module "lambda_exec_role" {
   source               = "./resources/iam/lambda-exec-role"
   environment          = local.config.environment
-  region               = local.config.region
+  region               = var.region
   aws_account_id       = var.aws_account_id
   dynamodb_table_name  = local.config.dynamodb_table_name
   GET_function_name    = module.lambda_GET_function.lambda_function_name
