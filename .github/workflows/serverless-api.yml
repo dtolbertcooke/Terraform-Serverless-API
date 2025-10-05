@@ -20,7 +20,7 @@ permissions:
   pull-requests: write # Allow PR comments with terraform plan
 
 jobs:
-  # First job: Tests & Lint (always runs)
+  # First job: Tests & Lint (always runs) #
   tests:
     name: Tests & Lint
     runs-on: ubuntu-latest
