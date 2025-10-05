@@ -9,10 +9,15 @@ description: Destroys Terraform cloud infrastructure in the specified environmen
 on:
   workflow_dispatch: # Manual trigger so you only run destroy when needed
     inputs:
-      region:
-        description: "Region to destroy resources in (i.e. us-east-1, eu-west-2, etc.)"
-        type: string
+      environment:
+        description: "Environment to destroy (dev, test, prod)"
         required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - test
+          - prod
 
 permissions:
   id-token: write # Required for github oidc authentication with AWS
@@ -23,17 +28,13 @@ jobs:
     name: Destroy Terraform
     runs-on: ubuntu-latest
     # Maps branch to environment (main=dev, test=test, prod=prod)
-    environment: ${{ github.ref == 'refs/heads/main' && 'dev' ||
-      github.ref == 'refs/heads/test' && 'test' ||
-      github.ref == 'refs/heads/prod' && 'prod' }}
+    environment: ${{ github.event.inputs.environment }}
     env:
-      ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'dev' ||
-        github.ref == 'refs/heads/test' && 'test' ||
-        github.ref == 'refs/heads/prod' && 'prod' }}
+      ENVIRONMENT: ${{ github.event.inputs.environment }}
 
     defaults:
       run:
-        working-directory: infrastructure/environments/${{ env.ENVIRONMENT }} # Keep runs scoped to environment code
+        working-directory: infrastructure # Keep runs scoped to environment code
 
     steps:
       # 1. Checkout the repo
@@ -44,7 +45,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: ${{ github.event.inputs.region }}
+          aws-region: ${{ vars.AWS_REGION }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
@@ -78,4 +79,4 @@ jobs:
 
       # 6. Destroy resources
       - name: Destroy
-        run: terraform destroy -var-file=${{ env.ENVIRONMENT }}.tfvars -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve
+        run: terraform apply -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve
