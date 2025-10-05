@@ -20,6 +20,11 @@ resource "aws_dynamodb_table" "table" {
   }
 
   deletion_protection_enabled = true
+  lifecycle {
+    ignore_changes = [
+      deletion_protection_enabled
+    ]
+  }
 
   tags = {
     Environment = var.environment

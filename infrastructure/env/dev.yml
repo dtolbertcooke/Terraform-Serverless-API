@@ -1,4 +1,3 @@
-# region: "us-east-1"
 environment: "dev"
 project_name: "fruit-api-project"
 owner: "Doug"
