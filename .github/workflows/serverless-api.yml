@@ -26,9 +26,9 @@ jobs:
     runs-on: ubuntu-latest
 
     # necessary to set environment per branch
-    # environment: ${{ github.ref == 'refs/heads/main' && 'dev' ||
-    #   github.ref == 'refs/heads/test' && 'test' ||
-    #   github.ref == 'refs/heads/prod' && 'prod' }}
+    environment: ${{ github.ref == 'refs/heads/main' && 'dev' ||
+      github.ref == 'refs/heads/test' && 'test' ||
+      github.ref == 'refs/heads/prod' && 'prod' }}
     env:
       ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'dev' ||
         github.ref == 'refs/heads/test' && 'test' ||
@@ -83,9 +83,9 @@ jobs:
     if: github.event_name == 'pull_request' # only run on PRs
 
     # necessary to set environment per branch
-    # environment: ${{ github.ref == 'refs/heads/main' && 'dev' ||
-    #   github.ref == 'refs/heads/test' && 'test' ||
-    #   github.ref == 'refs/heads/prod' && 'prod' }}
+    environment: ${{ github.ref == 'refs/heads/main' && 'dev' ||
+      github.ref == 'refs/heads/test' && 'test' ||
+      github.ref == 'refs/heads/prod' && 'prod' }}
     env:
       ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'dev' ||
         github.ref == 'refs/heads/test' && 'test' ||
@@ -159,9 +159,9 @@ jobs:
     if: github.event_name == 'push' # only run on pushes
 
     # necessary to set environment per branch
-    # environment: ${{ github.ref == 'refs/heads/main' && 'dev' ||
-    #   github.ref == 'refs/heads/test' && 'test' ||
-    #   github.ref == 'refs/heads/prod' && 'prod' }}
+    environment: ${{ github.ref == 'refs/heads/main' && 'dev' ||
+      github.ref == 'refs/heads/test' && 'test' ||
+      github.ref == 'refs/heads/prod' && 'prod' }}
     env:
       ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'dev' ||
         github.ref == 'refs/heads/test' && 'test' ||
