@@ -4,8 +4,8 @@
 resource "aws_s3_object" "lambda_zip" {
   bucket = var.bucket_name
   key    = "fruit-api-${var.method}.zip"
-  source = "${path.root}/../../../app/handlers/fruit-api-${var.method}.zip"                     # local path to your zip
-  etag   = try(filemd5("${path.root}/../../../app/handlers/fruit-api-${var.method}.zip"), null) # triggers re-upload if file changes
+  source = "${path.root}/../app/handlers/fruit-api-${var.method}.zip"                     # local path to your zip
+  etag   = try(filemd5("${path.root}/../app/handlers/fruit-api-${var.method}.zip"), null) # triggers re-upload if file changes
 }
 
 # Lambda function
