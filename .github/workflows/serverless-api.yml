@@ -229,3 +229,21 @@ jobs:
       # Apply terraform changes to build infrastructure using tfvars for environment
       - name: Terraform Apply
         run: terraform apply -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve
+
+      # Export Terraform outputs to JSON file
+      - name: Export Outputs
+        run: terraform output -json > tf_outputs.json
+
+      # Install jq for parsing JSON outputs
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      # Store app db table in SSM Parameter Store
+      # - This lets next workflow get the backend config dynamically
+      - name: Store App DB Table in AWS SSM
+        run: |
+          TABLE=$(jq -r '.db_app_table_name.value' tf_outputs.json)
+
+          aws ssm put-parameter --name "/tf/${{ env.ENVIRONMENT }}/backend/db_table"  --value "$TABLE"  --type String --overwrite=
+
+          echo "TABLE=$TABLE" >> $GITHUB_ENV
