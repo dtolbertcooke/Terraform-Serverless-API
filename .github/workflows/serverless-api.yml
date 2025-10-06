@@ -239,7 +239,6 @@ jobs:
         run: sudo apt-get install -y jq
 
       # Store app db table in SSM Parameter Store
-      # - This lets next workflow get the backend config dynamically
       - name: Store App DB Table in AWS SSM
         run: |
           DBTABLE=$(jq -r '.db_app_table_name.value' tf_outputs.json)

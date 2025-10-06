@@ -4,7 +4,7 @@
 # 2. Create OIDC provider & IAM policy for github actions
 # 3. Store backend config in AWS SSM Parameter Store
 # 4. Migrate local state into remote backend
-#
+
 name: Bootstrap Backend Pipeline
 description: Bootstraps the global Terraform backend (S3, DynamoDB, OIDC) and stores backend configuration in AWS SSM Parameter Store.
 on:
