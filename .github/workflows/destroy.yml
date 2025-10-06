@@ -72,7 +72,7 @@ jobs:
           encrypt        = true
           EOF
 
-          echo "Table=$DBTABLE" >> $GITHUB_ENV
+          echo "DBTABLE=$DBTABLE" >> $GITHUB_ENV
 
       # 4. Install Terraform
       - name: Setup Terraform
