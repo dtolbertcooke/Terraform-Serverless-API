@@ -18,7 +18,7 @@ module "app_db" {
   source                         = "./my-modules/dynamodb"
   dynamodb_table_name            = local.config.dynamodb_table_name
   billing_mode                   = "PROVISIONED" # required for autoscaling
-  environment                    = local.config.environment
+  environment                    = var.environment
   project_name                   = local.config.project_name
   owner                          = local.config.owner
   hash_key                       = local.config.app_db_hash_key
@@ -31,7 +31,7 @@ module "app_db" {
 # 2. lambda execution role for all lambda functions
 module "lambda_exec_role" {
   source               = "./resources/iam/lambda-exec-role"
-  environment          = local.config.environment
+  environment          = var.environment
   region               = var.region
   aws_account_id       = var.aws_account_id
   dynamodb_table_name  = local.config.dynamodb_table_name
@@ -45,7 +45,7 @@ module "lambda_exec_role" {
 module "lambda_GET_function" {
   source               = "./my-modules/lambda"
   method               = local.config.api_methods.GET
-  environment          = local.config.environment
+  environment          = var.environment
   project_name         = local.config.project_name
   owner                = local.config.owner
   lambda_exec_role_arn = module.lambda_exec_role.lambda_exec_role_arn
@@ -57,7 +57,7 @@ module "lambda_GET_function" {
 module "lambda_PUT_function" {
   source               = "./my-modules/lambda"
   method               = local.config.api_methods.PUT
-  environment          = local.config.environment
+  environment          = var.environment
   project_name         = local.config.project_name
   owner                = local.config.owner
   lambda_exec_role_arn = module.lambda_exec_role.lambda_exec_role_arn
@@ -69,7 +69,7 @@ module "lambda_PUT_function" {
 module "lambda_PATCH_function" {
   source               = "./my-modules/lambda"
   method               = local.config.api_methods.PATCH
-  environment          = local.config.environment
+  environment          = var.environment
   project_name         = local.config.project_name
   owner                = local.config.owner
   lambda_exec_role_arn = module.lambda_exec_role.lambda_exec_role_arn
@@ -81,7 +81,7 @@ module "lambda_PATCH_function" {
 module "lambda_DELETE_function" {
   source               = "./my-modules/lambda"
   method               = local.config.api_methods.DELETE
-  environment          = local.config.environment
+  environment          = var.environment
   project_name         = local.config.project_name
   owner                = local.config.owner
   lambda_exec_role_arn = module.lambda_exec_role.lambda_exec_role_arn
@@ -92,13 +92,13 @@ module "lambda_DELETE_function" {
 # 4. api gateway role
 module "api_gateway_role" {
   source      = "./resources/iam/api-gateway-role"
-  environment = local.config.environment
+  environment = var.environment
 }
 
 # 5. api gateway
 module "rest_api" {
   source               = "./resources/api-gateway"
-  environment          = local.config.environment
+  environment          = var.environment
   project_name         = local.config.project_name
   owner                = local.config.owner
   lambda_uri_GET       = module.lambda_GET_function.lambda_function_arn
