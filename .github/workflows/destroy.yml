@@ -60,7 +60,7 @@ jobs:
         run: |
           BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/bucket" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
           TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
-          # DBTABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/db_table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
+          DBTABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/db_table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
           REGION=$(aws ssm get-parameter --name "/tf/global-infra/backend/region" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
           echo "TF_VAR_state_bucket_name=$BUCKET" >> $GITHUB_ENV
 
@@ -72,7 +72,7 @@ jobs:
           encrypt        = true
           EOF
 
-          # echo "Table=$DBTABLE" >> $GITHUB_ENV
+          echo "Table=$DBTABLE" >> $GITHUB_ENV
 
       # 4. Install Terraform
       - name: Setup Terraform
@@ -85,8 +85,8 @@ jobs:
         run: terraform init -backend-config=${{ env.ENVIRONMENT }}.hcl
 
       # 6. Disable DynamoDB deletion protection (if enabled)
-      # - name: Disable specific DynamoDB deletion protection
-      #   run: aws dynamodb update-table --table-name "$DBTABLE" --deletion-protection-enabled false --region ${{ github.event.inputs.region }}
+      - name: Disable specific DynamoDB deletion protection
+        run: aws dynamodb update-table --table-name "$DBTABLE" --deletion-protection-enabled false --region ${{ github.event.inputs.region }}
 
       # 7. Destroy resources
       - name: Destroy
