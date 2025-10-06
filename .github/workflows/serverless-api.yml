@@ -245,5 +245,3 @@ jobs:
           DBTABLE=$(jq -r '.db_app_table_name.value' tf_outputs.json)
 
           aws ssm put-parameter --name "/tf/${{ env.ENVIRONMENT }}/backend/db_table"  --value "$DBTABLE"  --type String --overwrite=
-
-          echo "DBTABLE=$DBTABLE" >> $GITHUB_ENV
