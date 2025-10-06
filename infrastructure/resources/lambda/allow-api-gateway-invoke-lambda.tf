@@ -1,15 +1,15 @@
 resource "aws_lambda_permission" "allow_apigw_invoke_GET" {
   statement_id  = "AllowGETExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = var.lambda_GET_function 
+  function_name = var.lambda_GET_function
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${var.api_execution_arn}/*/GET${var.path}" 
+  source_arn    = "${var.api_execution_arn}/*/GET${var.path}"
 }
 # GET by id
 resource "aws_lambda_permission" "allow_apigw_invoke_GET_ID" {
   statement_id  = "AllowGETIDExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = var.lambda_GET_function 
+  function_name = var.lambda_GET_function
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${var.api_execution_arn}/*/GET${var.path}/*"
 }
@@ -17,9 +17,9 @@ resource "aws_lambda_permission" "allow_apigw_invoke_GET_ID" {
 resource "aws_lambda_permission" "allow_apigw_invoke_PUT" {
   statement_id  = "AllowPUTExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = var.lambda_PUT_function 
+  function_name = var.lambda_PUT_function
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${var.api_execution_arn}/*/PUT${var.path}" 
+  source_arn    = "${var.api_execution_arn}/*/PUT${var.path}"
 }
 
 resource "aws_lambda_permission" "allow_apigw_invoke_PATCH" {

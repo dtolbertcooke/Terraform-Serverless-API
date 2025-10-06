@@ -230,16 +230,16 @@ resource "aws_iam_policy" "github_actions_policy" {
         ]
       },
       {
-        Sid      = "AllowLogs"
-        Effect   = "Allow"
-        Action   = [
-          "logs:CreateLogGroup", 
-          "logs:CreateLogStream", 
-          "logs:PutLogEvents", 
-          "logs:PutRetentionPolicy", 
-          "logs:DescribeLogGroups", 
+        Sid    = "AllowLogs"
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:PutRetentionPolicy",
+          "logs:DescribeLogGroups",
           "logs:ListTagsForResource"
-          ]
+        ]
         Resource = "*"
       },
       {
@@ -278,11 +278,12 @@ resource "aws_iam_policy" "github_actions_policy" {
       {
         Sid    = "AllowSSMGetParameters"
         Effect = "Allow"
-        Action = ["ssm:GetParameters", "ssm:GetParameter"]
+        Action = ["ssm:GetParameters", "ssm:GetParameter", "ssm:PutParameter", "ssm:DeleteParameter"]
         Resource = [
           "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/bucket",
           "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/region",
-          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/table"
+          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/table",
+          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/db_table"
         ]
       }
     ]
@@ -291,10 +292,10 @@ resource "aws_iam_policy" "github_actions_policy" {
 
 # dev role
 module "github_oidc_role_dev" {
-  source             = "../../my-modules/iam/oidc-role"
-  environment        = "dev"
-  oidc_provider_arn  = module.github_oidc_provider.oidc_provider_arn
-  repository         = var.repository
+  source            = "../../my-modules/iam/oidc-role"
+  environment       = "dev"
+  oidc_provider_arn = module.github_oidc_provider.oidc_provider_arn
+  repository        = var.repository
 }
 
 # test role
@@ -302,7 +303,7 @@ module "github_oidc_role_test" {
   source            = "../../my-modules/iam/oidc-role"
   environment       = "test"
   oidc_provider_arn = module.github_oidc_provider.oidc_provider_arn
-  repository         = var.repository
+  repository        = var.repository
 }
 
 # prod role
@@ -310,7 +311,7 @@ module "github_oidc_role_prod" {
   source            = "../../my-modules/iam/oidc-role"
   environment       = "prod"
   oidc_provider_arn = module.github_oidc_provider.oidc_provider_arn
-  repository         = var.repository
+  repository        = var.repository
 }
 
 # Attach general policy to dev role

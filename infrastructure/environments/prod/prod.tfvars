@@ -1,6 +1,0 @@
-dynamodb_table_name     = "fruit-api-table"
-lambda_code_bucket_name = "fruit-api-lambda-code-bucket"
-environment             = "prod"
-project_name            = "fruit-api-project"
-owner                   = "Doug"
-app_db_hash_key         = "id"

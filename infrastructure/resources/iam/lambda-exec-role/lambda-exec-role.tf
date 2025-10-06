@@ -8,18 +8,18 @@ data "aws_iam_policy_document" "lambda_dynamodb_policy_document" {
       "dynamodb:PutItem",
       "dynamodb:Scan",
       "dynamodb:UpdateItem"
-      ]
+    ]
     resources = ["arn:aws:dynamodb:${var.region}:${var.aws_account_id}:table/${var.dynamodb_table_name}-${var.environment}"]
   }
   statement {
-    effect = "Allow"
+    effect  = "Allow"
     actions = ["logs:CreateLogGroup"]
     resources = [
       "arn:aws:logs:${var.region}:${var.aws_account_id}:${var.GET_function_name}",
       "arn:aws:logs:${var.region}:${var.aws_account_id}:${var.PUT_function_name}",
       "arn:aws:logs:${var.region}:${var.aws_account_id}:${var.PATCH_function_name}",
       "arn:aws:logs:${var.region}:${var.aws_account_id}:${var.DELETE_function_name}"
-      ]
+    ]
   }
   statement {
     effect = "Allow"
@@ -41,18 +41,18 @@ resource "aws_iam_policy" "lambda_dynamodb_policy" {
   policy = data.aws_iam_policy_document.lambda_dynamodb_policy_document.json
 }
 resource "aws_iam_role" "lambda_exec_role" {
-  name               = "lambda-execution-role-${var.environment}"
+  name = "lambda-execution-role-${var.environment}"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-      Effect = "Allow"
-      Action = "sts:AssumeRole"
-      Principal = {
-        Service = "lambda.amazonaws.com"
+        Effect = "Allow"
+        Action = "sts:AssumeRole"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
       }
-    }
-  ]
+    ]
   })
 }
 resource "aws_iam_role_policy_attachment" "lambda_dynamodb_policy_attachment" {
