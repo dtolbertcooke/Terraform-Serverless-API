@@ -5,7 +5,7 @@ resource "aws_api_gateway_account" "api_gateway_role" {
 
 # create rest api resource
 resource "aws_api_gateway_rest_api" "rest_api" {
-  name = "Fruit-API-${var.environment}"
+  name        = "Fruit-API-${var.environment}"
   description = "This is my Fruit API for demonstration purposes"
   endpoint_configuration {
     types = ["REGIONAL"]
@@ -122,7 +122,7 @@ resource "aws_api_gateway_deployment" "api_deployment" {
     aws_api_gateway_integration.api_integration_GET_ID,
     aws_api_gateway_integration.api_integration_PATCH,
     aws_api_gateway_integration.api_integration_DELETE
-                ]
+  ]
   rest_api_id = aws_api_gateway_rest_api.rest_api.id
 }
 # Stage with access logging
@@ -132,20 +132,20 @@ resource "aws_cloudwatch_log_group" "api_logs" {
 }
 # create api gateway stage
 resource "aws_api_gateway_stage" "api_stage" {
-  stage_name    = "${var.environment}"
+  stage_name    = var.environment
   rest_api_id   = aws_api_gateway_rest_api.rest_api.id
   deployment_id = aws_api_gateway_deployment.api_deployment.id
 
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.api_logs.arn
     format = jsonencode({
-      requestId = "$context.requestId",
-      ip        = "$context.identity.sourceIp",
-      requestTime = "$context.requestTime",
-      httpMethod  = "$context.httpMethod",
-      resourcePath= "$context.resourcePath",
-      status      = "$context.status",
-      protocol    = "$context.protocol"
+      requestId    = "$context.requestId",
+      ip           = "$context.identity.sourceIp",
+      requestTime  = "$context.requestTime",
+      httpMethod   = "$context.httpMethod",
+      resourcePath = "$context.resourcePath",
+      status       = "$context.status",
+      protocol     = "$context.protocol"
     })
   }
   depends_on = [aws_api_gateway_account.api_gateway_role]

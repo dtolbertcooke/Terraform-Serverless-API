@@ -65,15 +65,15 @@ jobs:
           terraform_version: "1.12.2" # Pin to specific version
 
       - name: Terraform fmt check
-        working-directory: infrastructure/environments/${{ env.ENVIRONMENT  }}
+        working-directory: infrastructure
         run: terraform fmt -check -recursive # enforce terraform formatting standards
 
       - name: Terraform Init # for validation
-        working-directory: infrastructure/environments/${{ env.ENVIRONMENT }}
+        working-directory: infrastructure
         run: terraform init -backend=false # doesn't affect state by skipping remote state; only validates modules/providers
 
       - name: Terraform validate
-        working-directory: infrastructure/environments/${{ env.ENVIRONMENT  }}
+        working-directory: infrastructure
         run: terraform validate # validate terraform syntax
 
   # Second job: Terraform Plan (on PRs)
@@ -93,7 +93,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: infrastructure/environments/${{ env.ENVIRONMENT }} # Keep runs scoped to environment code
+        working-directory: infrastructure # Keep runs scoped to environment code
 
     steps:
       # Checkout the repo
@@ -144,7 +144,7 @@ jobs:
       # Plan terraform changes and output to file
       - name: Terraform Plan
         id: plan
-        run: terraform plan -var-file="${{ env.ENVIRONMENT }}.tfvars" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -out=tfplan
+        run: terraform plan -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -out=tfplan
 
       # Comment PR with tfplan output
       - name: Comment PR with Plan
@@ -156,7 +156,7 @@ jobs:
   apply:
     runs-on: ubuntu-latest
     needs: [tests] # only run if tests pass
-    if: github.event_name == 'push' # only run on pushes
+    # if: github.event_name == 'push' # only run on pushes uncomment once done testing
 
     # necessary to set environment per branch
     environment: ${{ github.ref == 'refs/heads/main' && 'dev' ||
@@ -169,7 +169,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: infrastructure/environments/${{ env.ENVIRONMENT }} # Keep runs scoped to environment code
+        working-directory: infrastructure # Keep runs scoped to environment code
 
     steps:
       # Checkout the repo
@@ -228,4 +228,20 @@ jobs:
 
       # Apply terraform changes to build infrastructure using tfvars for environment
       - name: Terraform Apply
-        run: terraform apply -var-file="${{ env.ENVIRONMENT }}.tfvars" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve
+        run: terraform apply -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve
+
+      # Export Terraform outputs to JSON file
+      - name: Export Outputs
+        run: terraform output -json > tf_outputs.json
+
+      # Install jq for parsing JSON outputs
+      - name: Install jq
+        run: sudo apt-get install -y jq
+
+      # Store app db table in SSM Parameter Store
+      # - This lets next workflow get the backend config dynamically
+      - name: Store App DB Table in AWS SSM
+        run: |
+          DBTABLE=$(jq -r '.db_app_table_name.value' tf_outputs.json)
+
+          aws ssm put-parameter --name "/tf/${{ env.ENVIRONMENT }}/backend/db_table"  --value "$DBTABLE"  --type String --overwrite=
