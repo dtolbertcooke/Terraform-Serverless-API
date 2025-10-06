@@ -1,10 +1,6 @@
-environment: "dev"
 project_name: "fruit-api-project"
 owner: "Doug"
-
-lambda_code_bucket_name: "fruit-api-lambda-code-bucket"
 dynamodb_table_name: "fruit-api-table"
-
 app_db_hash_key: "id"
 
 api_methods:
@@ -12,8 +8,3 @@ api_methods:
   PUT: "PUT"
   PATCH: "PATCH"
   DELETE: "DELETE"
-
-tags:
-  Environment: "dev"
-  Owner: "Doug"
-  Project: "fruit-api-project"
