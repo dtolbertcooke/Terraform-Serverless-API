@@ -243,4 +243,4 @@ jobs:
         run: |
           DBTABLE=$(jq -r '.db_app_table_name.value' tf_outputs.json)
 
-          aws ssm put-parameter --name "/tf/${{ env.ENVIRONMENT }}/backend/db_table"  --value "$DBTABLE"  --type String --overwrite
+          aws ssm put-parameter --name "/tf/global-infra/backend/db_table"  --value "$DBTABLE"  --type String --overwrite
