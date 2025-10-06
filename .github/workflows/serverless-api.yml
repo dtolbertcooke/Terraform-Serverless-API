@@ -242,8 +242,8 @@ jobs:
       # - This lets next workflow get the backend config dynamically
       - name: Store App DB Table in AWS SSM
         run: |
-          TABLE=$(jq -r '.db_app_table_name.value' tf_outputs.json)
+          DBTABLE=$(jq -r '.db_app_table_name.value' tf_outputs.json)
 
-          aws ssm put-parameter --name "/tf/${{ env.ENVIRONMENT }}/backend/db_table"  --value "$TABLE"  --type String --overwrite=
+          aws ssm put-parameter --name "/tf/${{ env.ENVIRONMENT }}/backend/db_table"  --value "$DBTABLE"  --type String --overwrite=
 
-          echo "TABLE=$TABLE" >> $GITHUB_ENV
+          echo "DBTABLE=$DBTABLE" >> $GITHUB_ENV
