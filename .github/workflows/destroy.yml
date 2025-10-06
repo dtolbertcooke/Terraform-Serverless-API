@@ -84,8 +84,8 @@ jobs:
       - name: Init Terraform
         run: terraform init -backend-config=${{ env.ENVIRONMENT }}.hcl
 
-      # 6. Disable DynamoDB deletion protection (if enabled)
-      - name: Disable specific DynamoDB deletion protection
+      # 6. Disable deletion protection (if enabled)
+      - name: Disable deletion protection
         run: aws dynamodb update-table --table-name "$DBTABLE" --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
 
       # 7. Destroy resources
