@@ -23,95 +23,51 @@ See [`Architecture.md`](./Architecture.md) for diagrams and details.
 
 ```bash
 .
-├── .github/
-│   └── workflows/                        # GitHub Actions pipelines
-│       └── ci-cd.yml
-├── app
-│   ├── handlers                          # Lambda source code for CRUD functionality
-│   │   ├── fruit-api-DELETE
-│   │   │   ├── app.js
-│   │   │   ├── handler.js
-│   │   │   └── Makefile
-│   │   ├── fruit-api-GET
-│   │   │   ├── app.js
-│   │   │   ├── handler.js
-│   │   │   └── Makefile
-│   │   ├── fruit-api-PATCH
-│   │   │   ├── app.js
-│   │   │   ├── handler.js
-│   │   │   └── Makefile
-│   │   ├── fruit-api-PUT
-│   │   │   ├── app.js
-│   │   │   ├── handler.js
-│   │   │   └── Makefile
-│   ├── tests                            # jest unit tests for node.js lambda functions
-│   │   ├── delete.test.js
-│   │   ├── get.test.js
-│   │   ├── patch.test.js
-│   │   └── put.test.js
+├── .github/workflows/                    # GitHub Actions pipelines
+│   ├── terraform-pipeline.yml
+│   ├── bootstrap-pipeline.yml
+│   ├── destroy.yml
+├── app/
+│   ├── handlers/                         # Lambda source code for CRUD functionality
+│   ├── tests/                            # jest unit tests for node.js lambda functions
 │   ├── eslint.config.mjs
 │   ├── jest.config.js
 │   ├── package-lock.json
 │   └── package.json
-├── docs
-│   ├── ADRs.md                         # Architecture Decision Records
-│   └── architecture-diagram.png # Architecture diagram
-├── infrastructure
-│   ├── backend
-│   │   └── global                      # configuration for each environment
-│   │       ├── global-infra.tfvars
-│   │       ├── global.tf
-│   │       └── variables.tf
-│   ├── environments                    # configuration for each environment
-│   │   └── dev
-│   │       ├── dev.tfvars
-│   │       ├── dev.tf
-│   │       ├── remote-state.tf
-│   │       └── variables.tf
-│   │   └── test
-│   │       ├── test.tfvars
-│   │       ├── test.tf
-│   │       ├── remote-state.tf
-│   │       └── variables.tf
-│   │   └── prod
-│   │       ├── prod.tfvars
-│   │       ├── prod.tf
-│   │       ├── remote-state.tf
-│   │       └── variables.tf
-│   ├── my-modules
-│   │   ├── dynamodb
-│   │   │   ├── create-table.tf
-│   │   │   └── variables.tf
-│   │   ├── iam
-│   │   │   ├── oidc-provider
-│   │   │   │   ├── oidc-provider.tf
-│   │   │   └── oidc-role
-│   │   │       ├── github-oidc-role.tf
-│   │   │       └── variables.tf
-│   │   └── lambda
-│   │       ├── lambda-with-s3-code-storage.tf
-│   │       └── variables.tf
-│   ├── resources
-│   │   ├── api-gateway
-│   │   │   ├── rest-api.tf
-│   │   │   └── variables.tf
-│   │   ├── iam
-│   │   │   ├── api-gateway-role
-│   │   │   │   ├── api-gateway-role.tf
-│   │   │   │   └── variables.tf
-│   │   │   └── lambda-exec-role
-│   │   │       ├── lambda-exec-role.tf
-│   │   │       └── variables.tf
-│   │   ├── lambda
-│   │   │   ├── allow-api-gateway-invoke-lambda.tf
-│   │   │   └── variables.tf
-│   │   └── s3
-│   │       ├── create-bucket.tf
-│   │       └── variables.tf
+├── docs/
+│   ├── Architecture.md                   # Architecture documentation
+│   ├── architecture-diagram.png          # Architecture diagram
+│   └── ADRs/                             # Architecture Decision Records
+│       ├── ADR-001-State-Management.md
+│       ├── ADR-002-OIDC-Auth.md
+│       ├── ADR-003-CI-CD.md
+│       └── ADR-004-IAM-Design.md
+├── infrastructure/
+│   ├── main.tf
+│   ├── outputs.tf
 │   ├── provider.tf
-│   └── variables.tf
-├── Architecture.md                       # Architecture documentation
-└── README.md
+│   ├── remote-state.tf
+│   ├── variables.tf
+│   └── backend/global/                   # global configuration for each environment
+│       ├── global-infra.tfvars
+│       ├── global.tf
+│       ├── outputs.tf
+│       └── variables.tf
+│   ├── env/                              # configuration for each environment
+│       ├── dev.yml
+│       ├── test.yml
+│       └── prod.yml
+│   ├── my-modules/
+│       ├── dynamodb/
+│       ├── iam/
+│       ├── lambda/
+│   ├── resources/
+│       ├── api-gateway/
+│       ├── iam/
+│       ├── lambda/
+│       ├── s3/
+├── README.md
+└── LICENSE
 
 ```
 
