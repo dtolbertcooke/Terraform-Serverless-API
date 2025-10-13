@@ -25,3 +25,7 @@ variable "rest_api_deployment_id" {
   description = "ID of the API Gateway deployment"
   type        = string
 }
+variable "api_methods" {
+  description = "Map of API methods for lambda log groups"
+  type        = map(string)
+}

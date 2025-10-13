@@ -94,4 +94,5 @@ module "observability" {
   rest_api_deployment_id = module.rest_api.rest_api_deployment_id
   project_name           = local.config.project_name
   owner                  = local.config.owner
+  api_methods            = local.config.api_methods
 }
