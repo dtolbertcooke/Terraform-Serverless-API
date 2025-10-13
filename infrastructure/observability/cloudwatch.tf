@@ -1,4 +1,4 @@
-# set api gateway role for logs
+# api gateway role for logs
 resource "aws_api_gateway_account" "api_gateway_role" {
   cloudwatch_role_arn = var.api_gateway_role_arn
 }
@@ -33,6 +33,7 @@ resource "aws_api_gateway_stage" "api_stage" {
   xray_tracing_enabled = true # make configurable via a variable (true for prod, false for dev & test)
   depends_on           = [aws_api_gateway_account.api_gateway_role]
 }
+
 # Full Request and Response Logs
 resource "aws_api_gateway_method_settings" "path_specific" {
   rest_api_id = var.rest_api_id 
@@ -45,3 +46,9 @@ resource "aws_api_gateway_method_settings" "path_specific" {
     data_trace_enabled = true   # logs full request/response payloads (useful in dev/test, disable in prod for cost/security)
   }
 }
+
+# # Log group for GET function
+# resource "aws_cloudwatch_log_group" "lambda_log_group" {
+#   name              = "/aws/lambda/${var.GET_function_name}"
+#   retention_in_days = 14
+# }
