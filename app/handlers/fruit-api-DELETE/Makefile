@@ -3,18 +3,19 @@ PACKAGE_NAME=fruit-api-DELETE
 ZIP_FILE=../$(PACKAGE_NAME).zip
 
 # Default target
-all: clean install package
+all: clean deps package
 
 # Clean up old zip
 clean:
 	rm -f $(ZIP_FILE)
 
-# Install only production deps (ignore devDependencies)
-install:
-	npm i --omit=dev
+# Install deps from shared app root
+deps:
+	cd ../../ && npm ci --omit=dev
+	cp -r ../../node_modules .
 
 # Create deployment package
-package: clean install
+package: clean deps
 	zip -r $(ZIP_FILE) . \
 		-x "*.git*" \
 		-x "*.DS_Store" \
@@ -22,5 +23,4 @@ package: clean install
 		-x "package.json" \
 		-x "Makefile"
 
-# idk what this does
-# .PHONY: all clean install package
+.PHONY: all clean deps package

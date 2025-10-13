@@ -238,7 +238,8 @@ resource "aws_iam_policy" "github_actions_policy" {
           "logs:PutLogEvents",
           "logs:PutRetentionPolicy",
           "logs:DescribeLogGroups",
-          "logs:ListTagsForResource"
+          "logs:ListTagsForResource",
+          "logs:TagResource"
         ]
         Resource = "*"
       },
