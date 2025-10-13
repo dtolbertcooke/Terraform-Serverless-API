@@ -47,8 +47,17 @@ resource "aws_api_gateway_method_settings" "path_specific" {
   }
 }
 
-# # Log group for GET function
-# resource "aws_cloudwatch_log_group" "lambda_log_group" {
-#   name              = "/aws/lambda/${var.GET_function_name}"
-#   retention_in_days = 14
-# }
+# Log groups for lambda functions
+resource "aws_cloudwatch_log_group" "lambda_logs" {
+  for_each = local.config.api_methods
+  
+  name              = "/aws/lambda/fruit-api-${each.value}"
+  retention_in_days = 14
+
+  tags = {
+    Environment = var.environment
+    Project     = var.project_name
+    Owner       = var.owner
+    ManagedBy   = "Terraform"
+  }
+}

@@ -41,6 +41,7 @@ module "lambda_exec_role" {
   DELETE_function_name = module.lambda_functions["DELETE"].lambda_function_name
 }
 
+# 3. lambda functions
 module "lambda_functions" {
   for_each             = local.config.api_methods
   source               = "./my-modules/lambda"
@@ -52,54 +53,6 @@ module "lambda_functions" {
   bucket_name          = data.terraform_remote_state.global.outputs.lambda_code_bucket_dev_name
   dynamodb_table_name  = local.config.dynamodb_table_name
 }
-
-# # 3.1. GET function
-# module "lambda_GET_function" {
-#   source               = "./my-modules/lambda"
-#   method               = local.config.api_methods.GET
-#   environment          = var.environment
-#   project_name         = local.config.project_name
-#   owner                = local.config.owner
-#   lambda_exec_role_arn = module.lambda_exec_role.lambda_exec_role_arn
-#   bucket_name          = data.terraform_remote_state.global.outputs.lambda_code_bucket_dev_name
-#   dynamodb_table_name  = local.config.dynamodb_table_name
-# }
-
-# # 3.2. PUT function
-# module "lambda_PUT_function" {
-#   source               = "./my-modules/lambda"
-#   method               = local.config.api_methods.PUT
-#   environment          = var.environment
-#   project_name         = local.config.project_name
-#   owner                = local.config.owner
-#   lambda_exec_role_arn = module.lambda_exec_role.lambda_exec_role_arn
-#   bucket_name          = data.terraform_remote_state.global.outputs.lambda_code_bucket_dev_name
-#   dynamodb_table_name  = local.config.dynamodb_table_name
-# }
-
-# # 3.3. PATCH function
-# module "lambda_PATCH_function" {
-#   source               = "./my-modules/lambda"
-#   method               = local.config.api_methods.PATCH
-#   environment          = var.environment
-#   project_name         = local.config.project_name
-#   owner                = local.config.owner
-#   lambda_exec_role_arn = module.lambda_exec_role.lambda_exec_role_arn
-#   bucket_name          = data.terraform_remote_state.global.outputs.lambda_code_bucket_dev_name
-#   dynamodb_table_name  = local.config.dynamodb_table_name
-# }
-
-# # 3.4. DELETE function
-# module "lambda_DELETE_function" {
-#   source               = "./my-modules/lambda"
-#   method               = local.config.api_methods.DELETE
-#   environment          = var.environment
-#   project_name         = local.config.project_name
-#   owner                = local.config.owner
-#   lambda_exec_role_arn = module.lambda_exec_role.lambda_exec_role_arn
-#   bucket_name          = data.terraform_remote_state.global.outputs.lambda_code_bucket_dev_name
-#   dynamodb_table_name  = local.config.dynamodb_table_name
-# }
 
 # 4. api gateway role
 module "api_gateway_role" {
@@ -139,4 +92,6 @@ module "observability" {
   api_gateway_role_arn   = module.api_gateway_role.api_gateway_role_arn
   rest_api_id            = module.rest_api.rest_api_id
   rest_api_deployment_id = module.rest_api.rest_api_deployment_id
+  project_name           = local.config.project_name
+  owner                  = local.config.owner
 }

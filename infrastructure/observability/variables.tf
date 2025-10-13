@@ -3,6 +3,16 @@ variable "environment" {
   type        = string
   default     = "dev"
 }
+variable "project_name" {
+  description = "Name of the project"
+  type        = string
+  default     = "default_project"
+}
+variable "owner" {
+  description = "Owner of the resources"
+  type        = string
+  default     = "default_owner"
+}
 variable "api_gateway_role_arn" {
   description = "ARN of the IAM role for API Gateway to push logs to CloudWatch"
   type        = string
