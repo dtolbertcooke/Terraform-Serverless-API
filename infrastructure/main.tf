@@ -119,3 +119,12 @@ module "apigw_invoke_lambda_permission" {
   lambda_DELETE_function = module.lambda_DELETE_function.lambda_function_name
   path                   = module.rest_api.resource_path
 }
+
+# 7. observability (cloudwatch logs, x-ray)
+module "observability" {
+  source = "./observability"
+  environment = var.environment
+  api_gateway_role_arn = module.api_gateway_role.api_gateway_role_arn
+  rest_api_id = module.rest_api.rest_api_id
+  rest_api_deployment_id = module.rest_api.rest_api_deployment_id
+}
