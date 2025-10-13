@@ -42,7 +42,7 @@ module "lambda_exec_role" {
 }
 
 module "lambda_functions" {
-  for_each = local.config.api_methods
+  for_each             = local.config.api_methods
   source               = "./my-modules/lambda"
   method               = each.value
   environment          = var.environment

@@ -13,8 +13,8 @@ resource "aws_cloudwatch_log_group" "api_logs" {
 # defines the access log format and destination for api 
 resource "aws_api_gateway_stage" "api_stage" {
   stage_name    = var.environment
-  rest_api_id   = var.rest_api_id          
-  deployment_id = var.rest_api_deployment_id 
+  rest_api_id   = var.rest_api_id
+  deployment_id = var.rest_api_deployment_id
 
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.api_logs.arn
@@ -36,7 +36,7 @@ resource "aws_api_gateway_stage" "api_stage" {
 
 # Full Request and Response Logs
 resource "aws_api_gateway_method_settings" "path_specific" {
-  rest_api_id = var.rest_api_id 
+  rest_api_id = var.rest_api_id
   stage_name  = aws_api_gateway_stage.api_stage.stage_name
   method_path = "*/*"
 
