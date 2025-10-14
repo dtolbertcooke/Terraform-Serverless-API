@@ -20,11 +20,10 @@ data "aws_iam_policy_document" "lambda_dynamodb_policy_document" {
       "logs:DescribeLogStreams"
     ]
     resources = [
-      "arn:aws:logs:${var.region}:${var.aws_account_id}:log-group:/aws/lambda/*"
-      # "arn:aws:logs:${var.region}:${var.aws_account_id}:log-group:/aws/lambda/${var.GET_function_name}-${var.environment}:*",
-      # "arn:aws:logs:${var.region}:${var.aws_account_id}:log-group:/aws/lambda/${var.PUT_function_name}-${var.environment}:*",
-      # "arn:aws:logs:${var.region}:${var.aws_account_id}:log-group:/aws/lambda/${var.PATCH_function_name}-${var.environment}:*",
-      # "arn:aws:logs:${var.region}:${var.aws_account_id}:log-group:/aws/lambda/${var.DELETE_function_name}-${var.environment}:*"
+      "arn:aws:logs:${var.region}:${var.aws_account_id}:log-group:/aws/lambda/${var.GET_function_name}-${var.environment}:log-stream:*",
+      "arn:aws:logs:${var.region}:${var.aws_account_id}:log-group:/aws/lambda/${var.PUT_function_name}-${var.environment}:log-stream:*",
+      "arn:aws:logs:${var.region}:${var.aws_account_id}:log-group:/aws/lambda/${var.PATCH_function_name}-${var.environment}:log-stream:*",
+      "arn:aws:logs:${var.region}:${var.aws_account_id}:log-group:/aws/lambda/${var.DELETE_function_name}-${var.environment}:log-stream:*"
     ]
   }
 }
