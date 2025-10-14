@@ -16,9 +16,9 @@ resource "aws_cloudwatch_log_group" "api_access_logs" {
   }
 }
 
-# create execution logs group for api
+# create execution logs group for api (API Gateway uses this exact naming pattern)
 resource "aws_cloudwatch_log_group" "api_execution_logs" {
-  name              = "/apigw/${var.project_name}-execution-logs-${var.environment}"
+  name              = "/aws/apigateway/${var.rest_api_id}/${var.environment}"
   retention_in_days = var.environment == "prod" ? 14 : 7 # longer retention for prod
 
   tags = {
@@ -67,6 +67,9 @@ resource "aws_api_gateway_method_settings" "path_specific" {
     metrics_enabled    = true                                     # publishes API gateway metrics to cloudwatch
     data_trace_enabled = var.environment == "prod" ? false : true # logs full request/response payloads (useful in dev/test, disable in prod for cost/security)
   }
+
+  # Ensure execution log group exists before enabling logging
+  depends_on = [aws_cloudwatch_log_group.api_execution_logs]
 }
 
 # Log groups for lambda functions
