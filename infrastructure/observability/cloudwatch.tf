@@ -77,7 +77,7 @@ resource "aws_cloudwatch_log_group" "lambda_logs" {
   for_each = var.api_methods
 
   name              = "/aws/lambda/fruit-api-${each.value}-${var.environment}"
-  retention_in_days = var.environment == "prod" ? 30 : 14 # longer retention for prod
+  retention_in_days = var.environment == "prod" ? 14 : 7 # longer retention for prod
 
   tags = {
     Environment = var.environment
