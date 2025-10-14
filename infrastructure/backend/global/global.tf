@@ -297,7 +297,9 @@ resource "aws_iam_policy" "github_actions_policy" {
           "cloudwatch:DeleteDashboards"
         ],
         "Resource" : [
-          "arn:aws:cloudwatch::${var.aws_account_id}:dashboard/serverless-api-${var.environment}-dashboard"
+          "arn:aws:cloudwatch::${var.aws_account_id}:dashboard/serverless-api-dev-dashboard",
+          "arn:aws:cloudwatch::${var.aws_account_id}:dashboard/serverless-api-test-dashboard",
+          "arn:aws:cloudwatch::${var.aws_account_id}:dashboard/serverless-api-prod-dashboard"
         ]
       }
     ]
