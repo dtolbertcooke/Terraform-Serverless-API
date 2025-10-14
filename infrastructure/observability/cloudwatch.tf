@@ -94,10 +94,10 @@ resource "aws_cloudwatch_dashboard" "api_dashboard" {
     widgets = [
       {
         type = "metric",
-        x = 0, y = 0, width = 12, height = 6,
+        x    = 0, y = 0, width = 12, height = 6,
         properties = {
           metrics = [
-            ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name], # ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],
+            ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],  # ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],
             ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.get.name] # ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.get.name]
           ],
           period = 300,
