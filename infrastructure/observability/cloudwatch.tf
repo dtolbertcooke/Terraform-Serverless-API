@@ -112,7 +112,7 @@ resource "aws_cloudwatch_log_group" "lambda_logs" {
 
 # example 
 resource "aws_cloudwatch_dashboard" "example" {
-  dashboard_name = "example-dashboard"
+  dashboard_name = "serverless-api-${var.environment}-dashboard"
   dashboard_body = jsonencode({
     widgets = [
       {
