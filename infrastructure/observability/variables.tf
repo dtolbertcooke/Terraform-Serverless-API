@@ -29,3 +29,8 @@ variable "api_methods" {
   description = "Map of API methods for lambda log groups"
   type        = map(string)
 }
+variable "region" {
+  description = "The AWS region to deploy resources in"
+  type        = string
+  default     = "us-east-1"
+}
