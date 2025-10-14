@@ -87,28 +87,28 @@ resource "aws_cloudwatch_log_group" "lambda_logs" {
   }
 }
 
-# cloudwatch dashboard for api gateway, lambda and dynamodb metrics
-resource "aws_cloudwatch_dashboard" "api_dashboard" {
-  dashboard_name = "serverless-api-${var.environment}-dashboard"
-  dashboard_body = jsonencode({
-    widgets = [
-      {
-        type = "metric",
-        x    = 0, y = 0, width = 12, height = 6,
-        properties = {
-          metrics = [
-            ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],  # ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],
-            ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.get.name] # ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.get.name]
-          ],
-          period = 300,
-          stat   = "Sum",
-          region = var.region,
-          title  = "Lambda Errors and Duration"
-        }
-      }
-    ]
-  })
-}
+# # cloudwatch dashboard for api gateway, lambda and dynamodb metrics
+# resource "aws_cloudwatch_dashboard" "api_dashboard" {
+#   dashboard_name = "serverless-api-${var.environment}-dashboard"
+#   dashboard_body = jsonencode({
+#     widgets = [
+#       {
+#         type = "metric",
+#         x    = 0, y = 0, width = 12, height = 6,
+#         properties = {
+#           metrics = [
+#             ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],  # ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],
+#             ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.get.name] # ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.get.name]
+#           ],
+#           period = 300,
+#           stat   = "Sum",
+#           region = var.region,
+#           title  = "Lambda Errors and Duration"
+#         }
+#       }
+#     ]
+#   })
+# }
 
 # example 
 resource "aws_cloudwatch_dashboard" "example" {
