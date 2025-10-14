@@ -95,4 +95,5 @@ module "observability" {
   project_name           = local.config.project_name
   owner                  = local.config.owner
   api_methods            = local.config.api_methods
+  region                 = var.region
 }
