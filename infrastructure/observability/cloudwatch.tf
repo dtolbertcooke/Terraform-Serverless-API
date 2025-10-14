@@ -51,7 +51,7 @@ resource "aws_api_gateway_method_settings" "path_specific" {
 resource "aws_cloudwatch_log_group" "lambda_logs" {
   for_each = var.api_methods
 
-  name              = "/aws/lambda/fruit-api-${each.value}"
+  name              = "/aws/lambda/fruit-api-${each.value}-${var.environment}"
   retention_in_days = 14
 
   tags = {

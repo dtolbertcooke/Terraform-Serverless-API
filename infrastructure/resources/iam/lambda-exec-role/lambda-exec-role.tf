@@ -15,10 +15,10 @@ data "aws_iam_policy_document" "lambda_dynamodb_policy_document" {
     effect  = "Allow"
     actions = ["logs:CreateLogGroup"]
     resources = [
-      "arn:aws:logs:${var.region}:${var.aws_account_id}:${var.GET_function_name}",
-      "arn:aws:logs:${var.region}:${var.aws_account_id}:${var.PUT_function_name}",
-      "arn:aws:logs:${var.region}:${var.aws_account_id}:${var.PATCH_function_name}",
-      "arn:aws:logs:${var.region}:${var.aws_account_id}:${var.DELETE_function_name}"
+      "arn:aws:logs:${var.region}:${var.aws_account_id}:${var.GET_function_name}-${var.environment}",
+      "arn:aws:logs:${var.region}:${var.aws_account_id}:${var.PUT_function_name}-${var.environment}",
+      "arn:aws:logs:${var.region}:${var.aws_account_id}:${var.PATCH_function_name}-${var.environment}",
+      "arn:aws:logs:${var.region}:${var.aws_account_id}:${var.DELETE_function_name}-${var.environment}"
     ]
   }
   statement {
@@ -28,10 +28,10 @@ data "aws_iam_policy_document" "lambda_dynamodb_policy_document" {
       "logs:PutLogEvents"
     ]
     resources = [
-      "arn:aws:logs:${var.region}:${var.aws_account_id}:log-group:/aws/lambda/${var.GET_function_name}:*",
-      "arn:aws:logs:${var.region}:${var.aws_account_id}:log-group:/aws/lambda/${var.PUT_function_name}:*",
-      "arn:aws:logs:${var.region}:${var.aws_account_id}:log-group:/aws/lambda/${var.PATCH_function_name}:*",
-      "arn:aws:logs:${var.region}:${var.aws_account_id}:log-group:/aws/lambda/${var.DELETE_function_name}:*"
+      "arn:aws:logs:${var.region}:${var.aws_account_id}:log-group:/aws/lambda/${var.GET_function_name}-${var.environment}:*",
+      "arn:aws:logs:${var.region}:${var.aws_account_id}:log-group:/aws/lambda/${var.PUT_function_name}-${var.environment}:*",
+      "arn:aws:logs:${var.region}:${var.aws_account_id}:log-group:/aws/lambda/${var.PATCH_function_name}-${var.environment}:*",
+      "arn:aws:logs:${var.region}:${var.aws_account_id}:log-group:/aws/lambda/${var.DELETE_function_name}-${var.environment}:*"
     ]
   }
 }
