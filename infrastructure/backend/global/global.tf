@@ -286,6 +286,24 @@ resource "aws_iam_policy" "github_actions_policy" {
           "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/table",
           "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/db_table"
         ]
+      },
+      {
+        "Sid" : "CloudWatchDashboardAccess",
+        "Effect" : "Allow",
+        "Action" : [
+          "cloudwatch:PutDashboard",
+          "cloudwatch:GetDashboard",
+          "cloudwatch:ListDashboards",
+          "cloudwatch:DeleteDashboards"
+        ],
+        "Resource" : [
+          "arn:aws:cloudwatch:${var.region}:${var.aws_account_id}:dashboard/serverless-api-${var.environment}-dashboard"
+        ],
+        "Condition" : {
+          "StringLike" : {
+            "cloudwatch:dashboardName" : "serverless-api-${var.environment}-dashboard"
+          }
+        }
       }
     ]
   })
