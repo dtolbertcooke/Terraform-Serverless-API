@@ -62,9 +62,9 @@ resource "aws_api_gateway_method_settings" "path_specific" {
   method_path = "*/*"
 
   settings {
-    logging_level      = "INFO" # enables execution logging
+    logging_level = "INFO" # enables execution logging
     # logging_level      = var.environment == "prod" ? "ERROR" : "INFO"
-    metrics_enabled    = true # publishes API gateway metrics to cloudwatch
+    metrics_enabled    = true                                     # publishes API gateway metrics to cloudwatch
     data_trace_enabled = var.environment == "prod" ? false : true # logs full request/response payloads (useful in dev/test, disable in prod for cost/security)
   }
 }
