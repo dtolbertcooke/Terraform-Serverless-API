@@ -18,7 +18,7 @@ resource "aws_cloudwatch_log_group" "api_access_logs" {
 
 # create execution logs group for api (API Gateway uses this exact naming pattern)
 resource "aws_cloudwatch_log_group" "api_execution_logs" {
-  name              = "/aws/apigateway/${var.rest_api_id}/${var.environment}"
+  name              = "API-Gateway-Execution-Logs_${var.rest_api_id}/${var.environment}"
   retention_in_days = var.environment == "prod" ? 14 : 7 # longer retention for prod
 
   tags = {
