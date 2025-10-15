@@ -112,26 +112,26 @@ resource "aws_cloudwatch_dashboard" "api_dashboard" {
           region = var.region
         }
       },
-      #   # Lambda errors and duration
-      #   {
-      #     type   = "metric"
-      #     x      = 0 # x coordinate
-      #     y      = 6 # y coordinate
-      #     width  = 12
-      #     height = 6
+        # Lambda errors and duration
+        {
+          type   = "metric"
+          x      = 0 # x coordinate
+          y      = 6 # y coordinate
+          width  = 12
+          height = 6
 
-      #     properties = {
-      #       title  = "Lambda Errors and Duration"
-      #       metrics = [
-      #         ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],  # ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],
-      #         [".", "Duration", ".", "."] # ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.get.name]
-      #       ],
-      #       period = 300
-      #       view  = "timeSeries"
-      #       stat   = "Sum"
-      #       region = var.region
-      #     }
-      #   },
+          properties = {
+            title  = "Lambda Errors and Duration"
+            metrics = [
+              ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],  # ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],
+              [".", "Duration", ".", "."] # ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.get.name]
+            ],
+            period = 300
+            view  = "timeSeries"
+            stat   = "Sum"
+            region = var.region
+          }
+        },
       # DynamoDB read/write capacity units
       {
         type   = "metric"
