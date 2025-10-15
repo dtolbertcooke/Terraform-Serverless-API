@@ -87,28 +87,74 @@ resource "aws_cloudwatch_log_group" "lambda_logs" {
   }
 }
 
-# # cloudwatch dashboard for api gateway, lambda and dynamodb metrics
-# resource "aws_cloudwatch_dashboard" "api_dashboard" {
-#   dashboard_name = "serverless-api-${var.environment}-dashboard"
-#   dashboard_body = jsonencode({
-#     widgets = [
-#       {
-#         type = "metric",
-#         x    = 0, y = 0, width = 12, height = 6,
-#         properties = {
-#           metrics = [
-#             ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],  # ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],
-#             ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.get.name] # ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.get.name]
-#           ],
-#           period = 300,
-#           stat   = "Sum",
-#           region = var.region,
-#           title  = "Lambda Errors and Duration"
-#         }
-#       }
-#     ]
-#   })
-# }
+# cloudwatch dashboard for api gateway, lambda and dynamodb metrics
+resource "aws_cloudwatch_dashboard" "api_dashboard" {
+  dashboard_name = "serverless-api-${var.environment}-dashboard"
+  dashboard_body = jsonencode({
+    widgets = [
+      # API Gateway 4xx and 5xx errors
+      {
+        type   = "metric"
+        x      = 0 # x coordinate
+        y      = 0 # y coordinate
+        width  = 12
+        height = 6
+
+        properties = {
+          title  = "Fruit API 4XX and 5XX Errors"
+          metrics = [
+            ["AWS/ApiGateway", "4XXError", "ApiId", var.rest_api_id], # ["AWS/ApiGateway", "4XXError", "ApiName", "fruit-api", "Stage", var.environment],
+            [".", "5XXError", ".", "."]  # ["AWS/ApiGateway", "5XXError", "ApiName", "fruit-api", "Stage", var.environment]
+          ]
+          period = 300
+          view  = "timeSeries"
+          stat   = "Sum"
+          region = var.region
+        }
+      },
+    #   # Lambda errors and duration
+    #   {
+    #     type   = "metric"
+    #     x      = 0 # x coordinate
+    #     y      = 6 # y coordinate
+    #     width  = 12
+    #     height = 6
+
+    #     properties = {
+    #       title  = "Lambda Errors and Duration"
+    #       metrics = [
+    #         ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],  # ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],
+    #         [".", "Duration", ".", "."] # ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.get.name]
+    #       ],
+    #       period = 300
+    #       view  = "timeSeries"
+    #       stat   = "Sum"
+    #       region = var.region
+    #     }
+    #   },
+      # DynamoDB read/write capacity units
+      {
+        type   = "metric"
+        x      = 12 # x coordinate
+        y      = 0 # y coordinate
+        width  = 12
+        height = 6
+
+        properties = {
+          title  = "DynamoDB Read/Write Capacity Units"
+          metrics = [
+            ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", var.dynamodb_table_name],
+            [".", "ConsumedWriteCapacityUnits", ".", "."]
+          ],
+          period = 300
+          view  = "timeSeries"
+          stat   = "Sum"
+          region = var.region
+        }
+      }
+    ]
+  })
+}
 
 # example 
 resource "aws_cloudwatch_dashboard" "example" {
