@@ -97,4 +97,5 @@ module "observability" {
   api_methods            = local.config.api_methods
   region                 = var.region
   dynamodb_table_name    = local.config.dynamodb_table_name
+  lambda_function_name    = module.lambda_functions["GET"].lambda_function_name
 }
