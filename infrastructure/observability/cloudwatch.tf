@@ -104,7 +104,7 @@ resource "aws_cloudwatch_dashboard" "api_dashboard" {
           title = "Fruit API 4XX and 5XX Errors"
           metrics = [
             ["AWS/ApiGateway", "4XXError", "ApiId", var.rest_api_id, "Stage", var.environment], # ["AWS/ApiGateway", "4XXError", "ApiName", "fruit-api", "Stage", var.environment],
-            [".", "5XXError", ".", ".", ".", "."]                               # ["AWS/ApiGateway", "5XXError", "ApiName", "fruit-api", "Stage", var.environment]
+            [".", "5XXError", ".", ".", ".", "."]                                               # ["AWS/ApiGateway", "5XXError", "ApiName", "fruit-api", "Stage", var.environment]
           ]
           period = 60 # 300
           view   = "timeSeries"
