@@ -101,53 +101,53 @@ resource "aws_cloudwatch_dashboard" "api_dashboard" {
         height = 6
 
         properties = {
-          title  = "Fruit API 4XX and 5XX Errors"
+          title = "Fruit API 4XX and 5XX Errors"
           metrics = [
             ["AWS/ApiGateway", "4XXError", "ApiId", var.rest_api_id], # ["AWS/ApiGateway", "4XXError", "ApiName", "fruit-api", "Stage", var.environment],
-            [".", "5XXError", ".", "."]  # ["AWS/ApiGateway", "5XXError", "ApiName", "fruit-api", "Stage", var.environment]
+            [".", "5XXError", ".", "."]                               # ["AWS/ApiGateway", "5XXError", "ApiName", "fruit-api", "Stage", var.environment]
           ]
           period = 300
-          view  = "timeSeries"
+          view   = "timeSeries"
           stat   = "Sum"
           region = var.region
         }
       },
-    #   # Lambda errors and duration
-    #   {
-    #     type   = "metric"
-    #     x      = 0 # x coordinate
-    #     y      = 6 # y coordinate
-    #     width  = 12
-    #     height = 6
+      #   # Lambda errors and duration
+      #   {
+      #     type   = "metric"
+      #     x      = 0 # x coordinate
+      #     y      = 6 # y coordinate
+      #     width  = 12
+      #     height = 6
 
-    #     properties = {
-    #       title  = "Lambda Errors and Duration"
-    #       metrics = [
-    #         ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],  # ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],
-    #         [".", "Duration", ".", "."] # ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.get.name]
-    #       ],
-    #       period = 300
-    #       view  = "timeSeries"
-    #       stat   = "Sum"
-    #       region = var.region
-    #     }
-    #   },
+      #     properties = {
+      #       title  = "Lambda Errors and Duration"
+      #       metrics = [
+      #         ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],  # ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],
+      #         [".", "Duration", ".", "."] # ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.get.name]
+      #       ],
+      #       period = 300
+      #       view  = "timeSeries"
+      #       stat   = "Sum"
+      #       region = var.region
+      #     }
+      #   },
       # DynamoDB read/write capacity units
       {
         type   = "metric"
         x      = 12 # x coordinate
-        y      = 0 # y coordinate
+        y      = 0  # y coordinate
         width  = 12
         height = 6
 
         properties = {
-          title  = "DynamoDB Read/Write Capacity Units"
+          title = "DynamoDB Read/Write Capacity Units"
           metrics = [
             ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", var.dynamodb_table_name],
             [".", "ConsumedWriteCapacityUnits", ".", "."]
           ],
           period = 300
-          view  = "timeSeries"
+          view   = "timeSeries"
           stat   = "Sum"
           region = var.region
         }
