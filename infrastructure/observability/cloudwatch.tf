@@ -103,10 +103,10 @@ resource "aws_cloudwatch_dashboard" "api_dashboard" {
         properties = {
           title = "Fruit API 4XX and 5XX Errors"
           metrics = [
-            ["AWS/ApiGateway", "4XXError", "ApiId", var.rest_api_id], # ["AWS/ApiGateway", "4XXError", "ApiName", "fruit-api", "Stage", var.environment],
-            [".", "5XXError", ".", "."]                               # ["AWS/ApiGateway", "5XXError", "ApiName", "fruit-api", "Stage", var.environment]
+            ["AWS/ApiGateway", "4XXError", "ApiId", var.rest_api_id, "Stage", var.environment], # ["AWS/ApiGateway", "4XXError", "ApiName", "fruit-api", "Stage", var.environment],
+            [".", "5XXError", ".", ".", ".", "."]                               # ["AWS/ApiGateway", "5XXError", "ApiName", "fruit-api", "Stage", var.environment]
           ]
-          period = 10 # 300
+          period = 60 # 300
           view   = "timeSeries"
           stat   = "Sum"
           region = var.region
@@ -126,7 +126,7 @@ resource "aws_cloudwatch_dashboard" "api_dashboard" {
             ["AWS/Lambda", "Errors", "FunctionName", var.lambda_function_name], # ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],
             [".", "Duration", ".", "."]                                         # ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.get.name]
           ],
-          period = 10 # 300
+          period = 60 # 300
           view   = "timeSeries"
           stat   = "Sum"
           region = var.region
@@ -146,7 +146,7 @@ resource "aws_cloudwatch_dashboard" "api_dashboard" {
             ["AWS/DynamoDB", "ConsumedReadCapacityUnits", "TableName", var.dynamodb_table_name],
             [".", "ConsumedWriteCapacityUnits", ".", "."]
           ],
-          period = 10 # 300
+          period = 60 # 300
           view   = "timeSeries"
           stat   = "Sum"
           region = var.region
