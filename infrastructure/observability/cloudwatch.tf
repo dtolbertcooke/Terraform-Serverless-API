@@ -123,7 +123,7 @@ resource "aws_cloudwatch_dashboard" "api_dashboard" {
           properties = {
             title  = "Lambda Errors and Duration"
             metrics = [
-              ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],  # ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],
+              ["AWS/Lambda", "Errors", "FunctionName", var.lambda_function_name],  # ["AWS/Lambda", "Errors", "FunctionName", aws_lambda_function.get.name],
               [".", "Duration", ".", "."] # ["AWS/Lambda", "Duration", "FunctionName", aws_lambda_function.get.name]
             ],
             period = 300

@@ -38,3 +38,7 @@ variable "dynamodb_table_name" {
   description = "Name of the DynamoDB table for the API"
   type        = string
 }
+variable "lambda_function_name" {
+  description = "Name of the Lambda function(s) for monitoring"
+  type        = string
+}
