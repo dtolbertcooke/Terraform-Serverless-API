@@ -10,12 +10,12 @@ This project demonstrates how to build and deploy a **serverless REST API** on A
 
 1. **Terraform** → IaC to provision infrastructure
 2. **Remote Backend** → Terraform state stored in **S3**, with state locking via **DynamoDB**
-3. **CI/CD** → GitHub Actions with **OIDC role assumption** (no static AWS creds)
+3. **CI/CD** → GitHub Actions with **OIDC role assumption** (no static AWS credentials)
 4. **API Gateway** → entrypoint for HTTP/S requests
 5. **Lambda (Node.js)** → serverless application logic
-6. **DynamoDB** → NoSQL database to persist application data
+6. **DynamoDB** → NoSQL database to persist API data
 
-See [`Architecture.md`](./Architecture.md) for diagrams and details.
+See [`Architecture.md`](./docs/Architecture.md) for diagram and details.
 
 ---
 
@@ -23,21 +23,21 @@ See [`Architecture.md`](./Architecture.md) for diagrams and details.
 
 ```bash
 .
-├── .github/workflows/                    # GitHub Actions pipelines
-│   ├── terraform-pipeline.yml
-│   ├── bootstrap-pipeline.yml
+├── .github/workflows/                          # GitHub Actions pipelines
+│   ├── bootstrap-global.yml
+│   ├── serverless-api.yml
 │   ├── destroy.yml
 ├── app/
-│   ├── handlers/                         # Lambda source code for CRUD functionality
-│   ├── tests/                            # jest unit tests for node.js lambda functions
+│   ├── handlers/                               # Lambda source code for CRUD functionality
+│   ├── tests/                                  # jest unit tests for node.js lambda functions
 │   ├── eslint.config.mjs
 │   ├── jest.config.js
 │   ├── package-lock.json
 │   └── package.json
 ├── docs/
-│   ├── Architecture.md                   # Architecture documentation
-│   ├── architecture-diagram.png          # Architecture diagram
-│   └── ADRs/                             # Architecture Decision Records
+│   ├── Architecture.md                         # Architecture documentation
+│   ├── Serverless_API_Architecture_Diagram.png # Architecture diagram
+│   └── ADRs/                                   # Architecture Decision Records
 │       ├── ADR-001-State-Management.md
 │       ├── ADR-002-OIDC-Auth.md
 │       ├── ADR-003-CI-CD.md
@@ -48,12 +48,12 @@ See [`Architecture.md`](./Architecture.md) for diagrams and details.
 │   ├── provider.tf
 │   ├── remote-state.tf
 │   ├── variables.tf
-│   └── backend/global/                   # global configuration for each environment
+│   └── backend/global/                         # global configuration for each environment
 │       ├── global-infra.tfvars
 │       ├── global.tf
 │       ├── outputs.tf
 │       └── variables.tf
-│   ├── env/                              # configuration for each environment
+│   ├── env/                                    # configuration for each environment
 │       ├── dev.yml
 │       ├── test.yml
 │       └── prod.yml
@@ -66,8 +66,13 @@ See [`Architecture.md`](./Architecture.md) for diagrams and details.
 │       ├── iam/
 │       ├── lambda/
 │       ├── s3/
-├── README.md
-└── LICENSE
+│   ├── observability/
+│       ├── alarms.tf
+│       ├── cloudwatch.tf
+│       ├── dashboard.tf
+│       ├── outputs.tf
+│       ├── variables.tf
+└── README.md
 
 ```
 
