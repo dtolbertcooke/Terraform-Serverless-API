@@ -2,8 +2,6 @@
 
 This project demonstrates how to build and deploy a **serverless REST API** on AWS using **Infrastructure as Code (Terraform)** and a **CI/CD pipeline (GitHub Actions with OIDC)**.
 
----
-
 ## Architecture
 
 **High-Level Flow:**
@@ -16,8 +14,6 @@ This project demonstrates how to build and deploy a **serverless REST API** on A
 6. **DynamoDB** → NoSQL database to persist API data
 
 See [`Architecture.md`](./docs/Architecture.md) for diagram and details.
-
----
 
 ## Repository Structure
 
