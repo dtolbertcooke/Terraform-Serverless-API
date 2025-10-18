@@ -78,9 +78,9 @@ See [`Architecture.md`](./docs/Architecture.md) for diagram and details.
 
 ## Prerequisites
 
-- AWS Account with permissions to create IAM, S3, DynamoDB, API Gateway, Lambda.
+- AWS Account with permissions to create/delete IAM, S3, DynamoDB, API Gateway, Lambda.
 - Terraform v1.12.2+
-- Repo-level secrets for GitHub Actions
+- Environment-level secrets for GitHub Actions
 
 ## Setup
 
@@ -91,20 +91,27 @@ See [`Architecture.md`](./docs/Architecture.md) for diagram and details.
 **This creates:**
 
 - S3 bucket for Terraform state
-- S3 bucket for lambda source code (one per environment)
+- 3x S3 bucket for lambda source code (one per environment)
 - DynamoDB table for state locking
-- IAM role/policy/provider for GitHub OIDC
+- 3x IAM roles/1x policy/1x provider for GitHub OIDC
 
 2. Deploy Serverless API
 
 - run serverless-api.yml workflow
+
+**This creates:**
+
+- DynamoDB table for API data
+- 2x IAM roles for Lambda / API Gateway
+- 4x Lamda functions (CRUD)
+- API Gateway REST API
 
 ## CI/CD Workflow
 
 1. Manually run bootstrap-global.yml **once** to initialize backend.
 2. Build terraform infrastructure for serverless api
 
-- On push to main:
+- On push to environment:
 
   - GitHub Actions authenticates to AWS via OIDC
   - Runs tests on lambda code and terraform configuration
@@ -113,8 +120,6 @@ See [`Architecture.md`](./docs/Architecture.md) for diagram and details.
 - On pull requests:
 
   - Runs plans for review
-
-Workflow config: .github/workflows/serverless-api.yml
 
 ## Documentation
 
@@ -128,26 +133,24 @@ Workflow config: .github/workflows/serverless-api.yml
 
 ## Security Best Practices
 
-- No static AWS credentials → OIDC used for GitHub Actions.
+- No static AWS credentials for main workflow → OIDC used for GitHub Actions.
 - Least privilege IAM roles.
 - Remote state with locking (S3 + DynamoDB).
 - Parameters stored in AWS SSM Parameter Store
-- Secrets stored in GitHub Actions secrets.
+- Secrets stored in GitHub Actions enviroment secrets.
 
 ## Observability
 
 - CloudWatch logs for Lambda + API Gateway.
 - DynamoDB metrics in CloudWatch.
+- Dashboard for metrics / logs
 
 ## Future Improvements
 
-- Expand ADRs (observability, cost optimization, auth).
+- Expand ADRs (observability, cost optimization, authentication).
 - Add custom domain + HTTPS (ACM + API Gateway).
-- Add monitoring dashboards (CloudWatch Dashboards / Grafana).
-- Add monitoring with CloudWatch + X-Ray.
-- Add custom domain.
-- Add AWS secrets management (AWS Secrets Manager).
-- Add integration tests in CI/CD pipeline.
+- Add more monitoring dashboards (CloudWatch Dashboards / Grafana).
+- Convert Github environment secrets to AWS secrets management (AWS Secrets Manager).
 
 ## See also
 
