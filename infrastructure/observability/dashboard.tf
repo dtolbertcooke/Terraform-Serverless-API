@@ -15,8 +15,8 @@ resource "aws_cloudwatch_dashboard" "api_dashboard" {
         properties = {
           title = "Fruit API 4XX and 5XX Errors"
           metrics = [
-            ["AWS/ApiGateway", "4XXError", "ApiId", var.rest_api_id, "Stage", var.environment], 
-            [".", "5XXError", ".", ".", ".", "."]                                               
+            ["AWS/ApiGateway", "4XXError", "ApiId", var.rest_api_id, "Stage", var.environment],
+            [".", "5XXError", ".", ".", ".", "."]
           ]
           period = 300
           view   = "timeSeries"
@@ -35,8 +35,8 @@ resource "aws_cloudwatch_dashboard" "api_dashboard" {
         properties = {
           title = "Lambda Errors and Duration"
           metrics = [
-            ["AWS/Lambda", "Errors", "FunctionName", var.lambda_function_name], 
-            [".", "Duration", ".", "."]                                         
+            ["AWS/Lambda", "Errors", "FunctionName", var.lambda_function_name],
+            [".", "Duration", ".", "."]
           ],
           period = 300
           view   = "timeSeries"

@@ -154,4 +154,4 @@ See [`Architecture.md`](./docs/Architecture.md) for diagram and details.
 
 ## Author
 
-Doug Tolbert-Cooke.
+Doug Tolbert-Cooke
