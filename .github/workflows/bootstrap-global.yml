@@ -85,13 +85,13 @@ jobs:
           STATE_TABLE=$(jq -r '.dynamodb_table_name.value' tf_outputs.json)
           REGION=$(jq -r '.region.value' tf_outputs.json)
 
-          aws ssm put-parameter --name "/tf/${{ env.ENVIRONMENT }}/backend/bucket" --value "$STATE_BUCKET" --type String --overwrite
-          aws ssm put-parameter --name "/tf/${{ env.ENVIRONMENT }}/backend/table"  --value "$STATE_TABLE"  --type String --overwrite
+          aws ssm put-parameter --name "/tf/${{ env.ENVIRONMENT }}/backend/state-bucket" --value "$STATE_BUCKET" --type String --overwrite
+          aws ssm put-parameter --name "/tf/${{ env.ENVIRONMENT }}/backend/state-table"  --value "$STATE_TABLE"  --type String --overwrite
           aws ssm put-parameter --name "/tf/${{ env.ENVIRONMENT }}/backend/region" --value "$REGION" --type String --overwrite
 
-          echo "BUCKET=$STATE_BUCKET" >> $GITHUB_ENV
+          echo "STATE_BUCKET=$STATE_BUCKET" >> $GITHUB_ENV
           echo "REGION=$REGION" >> $GITHUB_ENV
-          echo "TABLE=$STATE_TABLE" >> $GITHUB_ENV
+          echo "STATE_TABLE=$STATE_TABLE" >> $GITHUB_ENV
 
       # 9. Configure remote backend file after resources exist
       - name: Configure remote backend
