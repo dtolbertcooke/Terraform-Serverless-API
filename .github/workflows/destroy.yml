@@ -57,7 +57,7 @@ jobs:
         run: |
           BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/bucket" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
           TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
-          DBTABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/db_table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
+          APP_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/app_table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
           REGION=$(aws ssm get-parameter --name "/tf/global-infra/backend/region" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
           echo "TF_VAR_state_bucket_name=$BUCKET" >> $GITHUB_ENV
 
@@ -69,7 +69,7 @@ jobs:
           encrypt        = true
           EOF
 
-          echo "DBTABLE=$DBTABLE" >> $GITHUB_ENV
+          echo "APP_TABLE=$APP_TABLE" >> $GITHUB_ENV
 
       # 4. Install Terraform
       - name: Setup Terraform
