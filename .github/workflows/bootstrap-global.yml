@@ -21,6 +21,7 @@ permissions:
 
 jobs:
   bootstrap-global:
+    if: github.ref == 'refs/heads/global-infra' # Only run from global-infra branch
     name: Bootstrap Global Terraform Backend
     runs-on: ubuntu-latest
     # Only use global-infra environment
@@ -33,6 +34,12 @@ jobs:
         working-directory: infrastructure/backend/global # Keep runs scoped to global backend code
 
     steps:
+      # 0. Guard - ensure only global-infra branch can run this workflow
+      - name: Guard - allow only global-infra branch
+        if: github.ref != 'refs/heads/global-infra'
+        run: |
+          echo "This workflow can only run from the global-infra branch."
+          exit 1
       # 1. Checkout the repo
       - name: Checkout
         uses: actions/checkout@v4
