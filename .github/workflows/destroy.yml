@@ -13,15 +13,6 @@ on:
         description: "Region to destroy resources in (i.e. us-east-1, eu-west-2, etc.)"
         type: string
         required: true
-      environment:
-        description: "Environment to destroy (dev, test, prod)"
-        required: true
-        default: "dev"
-        type: choice
-        options:
-          - dev
-          - test
-          - prod
 
 permissions:
   id-token: write # Required for github oidc authentication with AWS
@@ -31,10 +22,16 @@ jobs:
   destroy:
     name: Destroy Terraform
     runs-on: ubuntu-latest
-    # Maps branch to environment (main=dev, test=test, prod=prod)
-    environment: ${{ github.event.inputs.environment }}
+    # Maps branch to environment (main=dev, test=test, prod=prod, global-infra=global-infra)
+    environment: ${{ github.ref == 'refs/heads/main' && 'dev' ||
+      github.ref == 'refs/heads/test' && 'test' ||
+      github.ref == 'refs/heads/prod' && 'prod' ||
+      github.ref == 'refs/heads/global-infra' && 'global-infra' }}
     env:
-      ENVIRONMENT: ${{ github.event.inputs.environment }}
+      ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'dev' ||
+        github.ref == 'refs/heads/test' && 'test' ||
+        github.ref == 'refs/heads/prod' && 'prod' ||
+        github.ref == 'refs/heads/global-infra' && 'global-infra' }}
 
     defaults:
       run:
