@@ -55,17 +55,17 @@ jobs:
       # - Creates backend config file for terraform init
       - name: Fetch Backend Config from SSM
         run: |
-          BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/bucket" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
-          TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
+          STATE_BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-bucket" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
+          STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
           APP_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/app_table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
           REGION=$(aws ssm get-parameter --name "/tf/global-infra/backend/region" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
-          echo "TF_VAR_state_bucket_name=$BUCKET" >> $GITHUB_ENV
+          echo "TF_VAR_state_bucket_name=$STATE_BUCKET" >> $GITHUB_ENV
 
           cat > ${{ env.ENVIRONMENT }}.hcl <<EOF
-          bucket         = "$BUCKET"
+          bucket         = "$STATE_BUCKET"
           key            = "${{ env.ENVIRONMENT }}/terraform.tfstate"
           region         = "$REGION"
-          dynamodb_table = "$TABLE"
+          dynamodb_table = "$STATE_TABLE"
           encrypt        = true
           EOF
 
