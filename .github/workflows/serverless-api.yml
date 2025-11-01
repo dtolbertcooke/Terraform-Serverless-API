@@ -1,4 +1,4 @@
-name: Serverless API Pipeline
+name: Serverless API Terraform Pipeline
 description: Builds serverless API infrastructure in the specified environment.
 
 on:
@@ -13,11 +13,6 @@ on:
       - test
       - prod
   workflow_dispatch: # Manual trigger included to allow manual runs if needed
-    inputs:
-      region:
-        description: "Region to deploy to (i.e. us-east-1, eu-west-2, etc.)"
-        type: string
-        required: true
 
 permissions:
   id-token: write # Required for github oidc authentication with AWS
@@ -109,14 +104,8 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: ${{ github.event.inputs.region }}
+          aws-region: "us-east-1" # default region just for the OIDC STS call; set actual region later
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-oidc-role-${{ env.ENVIRONMENT }}
-
-      # Export AWS region and TF_VAR_region for terraform resources
-      - name: Export AWS region
-        run: |
-          echo "AWS_REGION=${{ github.event.inputs.region }}" >> $GITHUB_ENV
-          echo "TF_VAR_region=${{ github.event.inputs.region }}" >> $GITHUB_ENV
 
       # Fetch backend config from SSM
       # - Retrieves global S3/DynamoDB state backend
@@ -161,7 +150,7 @@ jobs:
   apply:
     runs-on: ubuntu-latest
     needs: [tests] # only run if tests pass
-    if: github.event_name == 'push' # only run on pushes
+    if: github.event_name == 'push' # only run on push requests
 
     # necessary to set environment per branch
     environment: ${{ github.ref == 'refs/heads/main' && 'dev' ||
@@ -196,12 +185,6 @@ jobs:
         with:
           aws-region: ${{ github.event.inputs.region }}
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-oidc-role-${{ env.ENVIRONMENT }}
-
-      # Export AWS region and TF_VAR_region for terraform resources
-      - name: Export AWS Region
-        run: |
-          echo "AWS_REGION=${{ github.event.inputs.region }}" >> $GITHUB_ENV
-          echo "TF_VAR_region=${{ github.event.inputs.region }}" >> $GITHUB_ENV
 
       # Fetch backend config from SSM
       # - Retrieves global S3/DynamoDB state backend

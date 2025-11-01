@@ -84,7 +84,7 @@ See [`Architecture.md`](./docs/Architecture.md) for diagram and details.
 
 ## Setup
 
-1. Bootstrap Remote Backend \*_once_
+1. Bootstrap Remote Backend **once**
 
 - Admin run bootstrap-global.yml workflow
 
