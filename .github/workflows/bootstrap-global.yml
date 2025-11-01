@@ -93,7 +93,7 @@ jobs:
           terraform {
             backend "s3" {
               bucket         = "$BUCKET"
-              key            = "global/terraform.tfstate"
+              key            = "global-infra/terraform.tfstate"
               region         = "$REGION"
               dynamodb_table = "$TABLE"
               encrypt        = true

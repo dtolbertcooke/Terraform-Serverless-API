@@ -1,4 +1,4 @@
-name: Serverless API Terraform Pipeline
+name: Serverless API Pipeline
 description: Builds serverless API infrastructure in the specified environment.
 
 on:
