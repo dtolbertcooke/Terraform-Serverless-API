@@ -104,7 +104,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: "us-east-1" # default region just for the OIDC STS call; set actual region later
+          aws-region: "us-east-1" # default region just for the OIDC STS call; set actual region in step
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-oidc-role-${{ env.ENVIRONMENT }}
 
       # Fetch backend config from SSM
@@ -183,7 +183,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: ${{ github.event.inputs.region }}
+          aws-region: "us-east-1" # default region just for the OIDC STS call; set actual region in next step
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-oidc-role-${{ env.ENVIRONMENT }}
 
       # Fetch backend config from SSM
