@@ -57,7 +57,7 @@ jobs:
         run: |
           STATE_BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-bucket" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
           STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
-          APP_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/app_table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
+          APP_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/app-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }} 2>/dev/null || echo "")
           REGION=$(aws ssm get-parameter --name "/tf/global-infra/backend/region" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
           echo "TF_VAR_state_bucket_name=$STATE_BUCKET" >> $GITHUB_ENV
 
