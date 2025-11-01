@@ -1,6 +1,6 @@
 # Serverless API (Terraform + GitHub Actions + AWS)
 
-This project demonstrates how to build and deploy a **serverless REST API** on AWS using **Infrastructure as Code (Terraform)** and a **CI/CD pipeline (GitHub Actions with OIDC)**.
+This project demonstrates how to build and deploy a **serverless REST API** on AWS using **Infrastructure as Code (Terraform)** and a **CI/CD pipelines (GitHub Actions with OIDC)**.
 
 ## Architecture
 
@@ -34,10 +34,14 @@ See [`Architecture.md`](./docs/Architecture.md) for diagram and details.
 │   ├── Architecture.md                         # Architecture documentation
 │   ├── Serverless_API_Architecture_Diagram.png # Architecture diagram
 │   └── ADRs/                                   # Architecture Decision Records
-│       ├── ADR-001-State-Management.md
-│       ├── ADR-002-OIDC-Auth.md
-│       ├── ADR-003-CI-CD.md
-│       └── ADR-004-IAM-Design.md
+│       ├── 1-iac.md
+│       ├── 2-state.md
+│       ├── 3-auth.md
+│       ├── 4-compute.md
+│       ├── 5-database.md
+│       ├── 6-cicd.md
+│       ├── 7-deploy-strategy.md
+│       └── 8-observability.md
 ├── infrastructure/
 │   ├── main.tf
 │   ├── outputs.tf
@@ -74,15 +78,15 @@ See [`Architecture.md`](./docs/Architecture.md) for diagram and details.
 
 ## Prerequisites
 
-- AWS Account with permissions to create/delete IAM, S3, DynamoDB, API Gateway, Lambda.
+- AWS Admin / Account with permissions to create S3 buckets, DynamoDB tables, IAM OIDC provider, IAM policies, IAM roles
+- Environment level secrets for bootstrap workflow (Access Key & Secret Access Key)
 - Terraform v1.12.2+
-- Environment-level secrets for GitHub Actions
 
 ## Setup
 
-1. Bootstrap Remote Backend
+1. Bootstrap Remote Backend \*_once_
 
-- run bootstrap-global.yml workflow
+- Admin run bootstrap-global.yml workflow
 
 **This creates:**
 
@@ -111,6 +115,7 @@ See [`Architecture.md`](./docs/Architecture.md) for diagram and details.
 
   - GitHub Actions authenticates to AWS via OIDC
   - Runs tests on lambda code and terraform configuration
+  - Auto approve (dev / test branches) → terraform apply
   - On approval (global-infra / prod branches) → terraform apply
 
 - On pull requests:
@@ -139,11 +144,11 @@ See [`Architecture.md`](./docs/Architecture.md) for diagram and details.
 
 - CloudWatch logs for Lambda + API Gateway.
 - DynamoDB metrics in CloudWatch.
-- Dashboard for metrics / logs
+- Dashboard for metrics / logs.
 
 ## Future Improvements
 
-- Expand ADRs (observability, cost optimization, authentication).
+- Expand ADRs (cost optimization).
 - Add custom domain + HTTPS (ACM + API Gateway).
 - Add more monitoring dashboards (CloudWatch Dashboards / Grafana).
 - Convert Github environment secrets to AWS secrets management (AWS Secrets Manager).
