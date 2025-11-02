@@ -1,6 +1,6 @@
 # This workflow destroys the Terraform cloud infrastructure.
 # Steps:
-# 1. Fetch backend config from Systems Manager Parameter Store
+# 1. Fetch backend config from SSM Parameter Store
 # 2. Initialize Terraform with remote backend
 # 3. Destroy resources in the specified environment
 name: Destroy Infrastructure Pipeline
@@ -50,10 +50,10 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      # 3. Fetch backend config from Systems Manager Parameter Store
+      # 3. Fetch backend config from SSM Parameter Store
       # - Retrieves global S3/DynamoDB state backend
       # - Creates backend config file for terraform init
-      - name: Fetch Backend Config from Systems Manager Parameter Store
+      - name: Fetch Backend Config from SSM Parameter Store
         run: |
           STATE_BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-bucket" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
           APP_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/app-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }} 2>/dev/null || echo "") # ignores if not found
@@ -95,7 +95,7 @@ jobs:
           aws dynamodb update-table --table-name "$STATE_TABLE" --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
 
         # 6b. Disable deletion protection (if enabled)
-        # - get app table from Systems Manager Parameter Store
+        # - get app table from SSM Parameter Store
       - name: Disable deletion protection (Environment)
         if: ${{ env.ENVIRONMENT != 'global-infra' }}
         run: aws dynamodb update-table --table-name "$APP_TABLE" --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
