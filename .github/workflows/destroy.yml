@@ -86,12 +86,12 @@ jobs:
         run: terraform init -backend-config=${{ env.ENVIRONMENT }}.hcl
 
         # 6a. Disable deletion protection (if enabled)
-        # - get state table from terraform output
+        # - get state table from .tfvars file
       - name: Disable deletion protection (Global)
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
         working-directory: infrastructure/backend/global
         run: |
-          STATE_TABLE=$(terraform output -raw state_table_name)
+          STATE_TABLE=$(grep 'state_table_name' global-infra.tfvars | cut -d'"' -f2)
           aws dynamodb update-table --table-name "$STATE_TABLE" --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
 
         # 6b. Disable deletion protection (if enabled)
