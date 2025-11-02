@@ -91,14 +91,14 @@ jobs:
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
         working-directory: infrastructure/backend/global
         run: |
-          STATE_TABLE=$(grep 'state_table_name' global-infra.tfvars | cut -d'"' -f2)
-          aws dynamodb update-table --table-name "$STATE_TABLE" --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
+          STATE_TABLE=$(grep state_table_name global-infra.tfvars | cut -d'"' -f2)-${ENVIRONMENT}
+          aws dynamodb update-table --table-name $STATE_TABLE --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
 
         # 6b. Disable deletion protection (if enabled)
         # - get app table from SSM Parameter Store
       - name: Disable deletion protection (Environment)
         if: ${{ env.ENVIRONMENT != 'global-infra' }}
-        run: aws dynamodb update-table --table-name "$APP_TABLE" --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
+        run: aws dynamodb update-table --table-name $APP_TABLE --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
 
       # 7a. Destroy resources
       - name: Destroy (Global)
