@@ -69,6 +69,7 @@ jobs:
           encrypt        = true
           EOF
 
+          echo "STATE_TABLE=$STATE_TABLE" >> $GITHUB_ENV
           echo "APP_TABLE=$APP_TABLE" >> $GITHUB_ENV
 
       # 4. Install Terraform
@@ -90,8 +91,15 @@ jobs:
         if: ${{ env.ENVIRONMENT != 'global-infra' }}
         run: terraform init -backend-config=${{ env.ENVIRONMENT }}.hcl
 
-      # 6. Disable deletion protection (if enabled)
-      - name: Disable deletion protection
+      # 6a. Disable deletion protection (if enabled)
+      - name: Disable deletion protection (Global)
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
+        working-directory: infrastructure/backend/global
+        run: aws dynamodb update-table --table-name "$STATE_TABLE" --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
+
+      # 6b. Disable deletion protection (if enabled)
+      - name: Disable deletion protection (Environment)
+        if: ${{ env.ENVIRONMENT != 'global-infra' }}
         run: aws dynamodb update-table --table-name "$APP_TABLE" --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
 
       # 7a. Destroy resources
