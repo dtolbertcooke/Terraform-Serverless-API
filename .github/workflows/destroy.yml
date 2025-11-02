@@ -1,6 +1,6 @@
 # This workflow destroys the Terraform cloud infrastructure.
 # Steps:
-# 1. Fetch backend config from SSM
+# 1. Fetch backend config from Systems Manager Parameter Store
 # 2. Initialize Terraform with remote backend
 # 3. Destroy resources in the specified environment
 name: Destroy Infrastructure Pipeline
@@ -50,42 +50,23 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      # 3. Fetch backend config from SSM
+      # 3. Fetch backend config from Systems Manager Parameter Store
       # - Retrieves global S3/DynamoDB state backend
       # - Creates backend config file for terraform init
-      - name: Fetch Backend Config from SSM
+      - name: Fetch Backend Config from Systems Manager Parameter Store
         run: |
           STATE_BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-bucket" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
-          STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
-          APP_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/app-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }} 2>/dev/null || echo "")
+          APP_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/app-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }} 2>/dev/null || echo "") # ignores if not found
           REGION=$(aws ssm get-parameter --name "/tf/global-infra/backend/region" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
+          echo "APP_TABLE=$APP_TABLE" >> $GITHUB_ENV # export for 'Disable deletion protection (Environment)' step
 
-          echo "TF_VAR_state_bucket_name=$STATE_BUCKET" >> $GITHUB_ENV
-          echo "STATE_TABLE=$STATE_TABLE" >> $GITHUB_ENV
-          echo "APP_TABLE=$APP_TABLE" >> $GITHUB_ENV
-
-          # Choose which db table to use based on environment
-          if [ "$ENVIRONMENT" = "global-infra" ]; then
-            echo "Using $STATE_TABLE to destroy $ENVIRONMENT backend"
-            cat > $ENVIRONMENT.hcl << 'HEREDOC_EOF'
+          cat > ${{ env.ENVIRONMENT }}.hcl <<EOF
           bucket         = "$STATE_BUCKET"
-          key            = "$ENVIRONMENT/terraform.tfstate"
-          region         = "$REGION"
-          dynamodb_table = "$STATE_TABLE"
-          encrypt        = true
-          HEREDOC_EOF
-          else
-            echo "Using $APP_TABLE to destroy $ENVIRONMENT backend"
-            cat > $ENVIRONMENT.hcl << 'HEREDOC_EOF'
-          bucket         = "$STATE_BUCKET"
-          key            = "$ENVIRONMENT/terraform.tfstate"
+          key            = "${{ env.ENVIRONMENT }}/terraform.tfstate"
           region         = "$REGION"
           dynamodb_table = "$APP_TABLE"
           encrypt        = true
-          HEREDOC_EOF
-          fi
-
-          echo "Created backend config file: $ENVIRONMENT.hcl"
+          EOF
 
       # 4. Install Terraform
       - name: Setup Terraform
@@ -93,24 +74,28 @@ jobs:
         with:
           terraform_version: "1.12.2" # Pin to specific version
 
-      # 5a. Initialize Terraform locally on github runner
+      # 5a. Initialize Terraform on github runner
       - name: Init Terraform (Global)
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
         working-directory: infrastructure/backend/global
-        run: terraform init -backend-config=${{ env.ENVIRONMENT }}.hcl
+        run: terraform init -vars-file=${{ env.ENVIRONMENT }}.tfvars
 
-      # 5b. Initialize Terraform locally on github runner
+      # 5b. Initialize Terraform on github runner
       - name: Init Terraform (Environment)
         if: ${{ env.ENVIRONMENT != 'global-infra' }}
         run: terraform init -backend-config=${{ env.ENVIRONMENT }}.hcl
 
-      # 6a. Disable deletion protection (if enabled)
+        # 6a. Disable deletion protection (if enabled)
+        # - get state table from terraform output
       - name: Disable deletion protection (Global)
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
         working-directory: infrastructure/backend/global
-        run: aws dynamodb update-table --table-name "$STATE_TABLE" --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
+        run: |
+          STATE_TABLE=$(terraform output -raw state_table_name)
+          aws dynamodb update-table --table-name "$STATE_TABLE" --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
 
-      # 6b. Disable deletion protection (if enabled)
+        # 6b. Disable deletion protection (if enabled)
+        # - get app table from Systems Manager Parameter Store
       - name: Disable deletion protection (Environment)
         if: ${{ env.ENVIRONMENT != 'global-infra' }}
         run: aws dynamodb update-table --table-name "$APP_TABLE" --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}

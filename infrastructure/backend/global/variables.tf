@@ -35,7 +35,7 @@ variable "backend_db_hash_key" {
   type        = string
   default     = "LockID"
 }
-variable "dynamodb_table_name" {
+variable "state_table_name" {
   description = "Name of the DynamoDB table for Terraform locks"
   type        = string
 }

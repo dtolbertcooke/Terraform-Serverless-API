@@ -39,7 +39,7 @@ module "lambda_code_bucket_prod" {
 # locking table
 module "dynamodb_backend" {
   source              = "../../my-modules/dynamodb"
-  dynamodb_table_name = var.dynamodb_table_name
+  dynamodb_table_name = var.state_table_name
   billing_mode        = "PAY_PER_REQUEST"
   environment         = var.environment
   project_name        = var.project_name
