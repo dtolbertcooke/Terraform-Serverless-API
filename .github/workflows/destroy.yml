@@ -65,27 +65,27 @@ jobs:
           echo "APP_TABLE=$APP_TABLE" >> $GITHUB_ENV
 
           # Choose which DynamoDB table to use based on environment
-          if [ "${{ env.ENVIRONMENT }}" = "global-infra" ]; then
-            echo "Using STATE_TABLE for global-infra backend"
-            cat > ${{ env.ENVIRONMENT }}.hcl <<EOF
+          if [ "$ENVIRONMENT" = "global-infra" ]; then
+            echo "Using $STATE_TABLE for global-infra backend"
+            cat > $ENVIRONMENT.hcl <<EOF
             bucket         = "$STATE_BUCKET"
-            key            = "${{ env.ENVIRONMENT }}/terraform.tfstate"
+            key            = "$ENVIRONMENT/terraform.tfstate"
             region         = "$REGION"
             dynamodb_table = "$STATE_TABLE"
             encrypt        = true
             EOF
           else
-            echo "Using APP_TABLE for ${{ env.ENVIRONMENT }} backend"
-            cat > ${{ env.ENVIRONMENT }}.hcl <<EOF
+            echo "Using $APP_TABLE for $ENVIRONMENT backend"
+            cat > $ENVIRONMENT.hcl <<EOF
             bucket         = "$STATE_BUCKET"
-            key            = "${{ env.ENVIRONMENT }}/terraform.tfstate"
+            key            = "$ENVIRONMENT/terraform.tfstate"
             region         = "$REGION"
             dynamodb_table = "$APP_TABLE"
             encrypt        = true
             EOF
           fi
 
-          echo "Created backend config file: ${{ env.ENVIRONMENT }}.hcl"
+          echo "Created backend config file: $ENVIRONMENT.hcl"
 
       # 4. Install Terraform
       - name: Setup Terraform
