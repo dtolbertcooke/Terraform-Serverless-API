@@ -78,7 +78,7 @@ jobs:
       - name: Init Terraform (Global)
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
         working-directory: infrastructure/backend/global
-        run: terraform init -vars-file=${{ env.ENVIRONMENT }}.tfvars
+        run: terraform init -var-file=${{ env.ENVIRONMENT }}.tfvars
 
       # 5b. Initialize Terraform on github runner
       - name: Init Terraform (Environment)
