@@ -59,26 +59,39 @@ jobs:
           STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
           APP_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/app-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }} 2>/dev/null || echo "")
           REGION=$(aws ssm get-parameter --name "/tf/global-infra/backend/region" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
+
           echo "TF_VAR_state_bucket_name=$STATE_BUCKET" >> $GITHUB_ENV
-
-          cat > ${{ env.ENVIRONMENT }}.hcl <<EOF
-          bucket         = "$STATE_BUCKET"
-          key            = "${{ env.ENVIRONMENT }}/terraform.tfstate"
-          region         = "$REGION"
-          dynamodb_table = "$STATE_TABLE"
-          encrypt        = true
-          EOF
-
           echo "STATE_TABLE=$STATE_TABLE" >> $GITHUB_ENV
           echo "APP_TABLE=$APP_TABLE" >> $GITHUB_ENV
+
+          # Choose which DynamoDB table to use based on environment
+          if [ "${{ env.ENVIRONMENT }}" = "global-infra" ]; then
+            echo "Using STATE_TABLE for global-infra backend"
+            cat > ${{ env.ENVIRONMENT }}.hcl <<EOF
+            bucket         = "$STATE_BUCKET"
+            key            = "${{ env.ENVIRONMENT }}/terraform.tfstate"
+            region         = "$REGION"
+            dynamodb_table = "$STATE_TABLE"
+            encrypt        = true
+            EOF
+          else
+            echo "Using APP_TABLE for ${{ env.ENVIRONMENT }} backend"
+            cat > ${{ env.ENVIRONMENT }}.hcl <<EOF
+            bucket         = "$STATE_BUCKET"
+            key            = "${{ env.ENVIRONMENT }}/terraform.tfstate"
+            region         = "$REGION"
+            dynamodb_table = "$APP_TABLE"
+            encrypt        = true
+            EOF
+          fi
+
+          echo "Created backend config file: ${{ env.ENVIRONMENT }}.hcl"
 
       # 4. Install Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.12.2" # Pin to specific version
-
-      # if global-infra env, cd into global backend dir and destroy
 
       # 5a. Initialize Terraform locally on github runner
       - name: Init Terraform (Global)
