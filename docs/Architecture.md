@@ -57,7 +57,7 @@ This project implements a Serverless REST API with CRUD HTTP operations on AWS u
 
 ## 4. High-Level Architecture
 
-![Serverless API Architecture](./docs/Serverless_API_Architecture_Diagram.png)
+![Serverless API Architecture](./Serverless_API_Architecture_Diagram.png)
 
 ### API flow:
 
@@ -79,7 +79,7 @@ This project implements a Serverless REST API with CRUD HTTP operations on AWS u
   4. Terraform plan → preview infrastructure changes
   5. Terraform apply → deploy to AWS
 
-- **Security**: GitHub Actions assumes IAM role using OIDC; no long-lived credentials
+- **Security**: GitHub Actions assumes IAM role using OIDC; no long lived credentials
 
 ## 6. IaC - Terraform
 

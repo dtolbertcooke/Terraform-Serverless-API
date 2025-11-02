@@ -92,7 +92,7 @@ jobs:
 
       # 6. Disable deletion protection (if enabled)
       - name: Disable deletion protection
-        run: aws dynamodb update-table --table-name "$DBTABLE" --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
+        run: aws dynamodb update-table --table-name "$APP_TABLE" --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
 
       # 7a. Destroy resources
       - name: Destroy (Global)
