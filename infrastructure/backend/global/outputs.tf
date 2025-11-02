@@ -14,7 +14,7 @@ output "lambda_code_bucket_prod_name" {
   value = module.lambda_code_bucket_prod.bucket_name
 }
 output "state_table_name" {
-  value = module.dynamodb_backend.state_table_name
+  value = module.dynamodb_backend.dynamodb_table_name
 }
 output "github_oidc_provider_arn" {
   value = module.github_oidc_provider.oidc_provider_arn
