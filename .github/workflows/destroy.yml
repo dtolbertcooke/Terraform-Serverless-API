@@ -64,25 +64,25 @@ jobs:
           echo "STATE_TABLE=$STATE_TABLE" >> $GITHUB_ENV
           echo "APP_TABLE=$APP_TABLE" >> $GITHUB_ENV
 
-          # Choose which DynamoDB table to use based on environment
+          # Choose which db table to use based on environment
           if [ "$ENVIRONMENT" = "global-infra" ]; then
-            echo "Using $STATE_TABLE for global-infra backend"
-            cat > $ENVIRONMENT.hcl <<EOF
-            bucket         = "$STATE_BUCKET"
-            key            = "$ENVIRONMENT/terraform.tfstate"
-            region         = "$REGION"
-            dynamodb_table = "$STATE_TABLE"
-            encrypt        = true
-            EOF
+            echo "Using $STATE_TABLE to destroy $ENVIRONMENT backend"
+            cat > $ENVIRONMENT.hcl << 'HEREDOC_EOF'
+          bucket         = "$STATE_BUCKET"
+          key            = "$ENVIRONMENT/terraform.tfstate"
+          region         = "$REGION"
+          dynamodb_table = "$STATE_TABLE"
+          encrypt        = true
+          HEREDOC_EOF
           else
-            echo "Using $APP_TABLE for $ENVIRONMENT backend"
-            cat > $ENVIRONMENT.hcl <<EOF
-            bucket         = "$STATE_BUCKET"
-            key            = "$ENVIRONMENT/terraform.tfstate"
-            region         = "$REGION"
-            dynamodb_table = "$APP_TABLE"
-            encrypt        = true
-            EOF
+            echo "Using $APP_TABLE to destroy $ENVIRONMENT backend"
+            cat > $ENVIRONMENT.hcl << 'HEREDOC_EOF'
+          bucket         = "$STATE_BUCKET"
+          key            = "$ENVIRONMENT/terraform.tfstate"
+          region         = "$REGION"
+          dynamodb_table = "$APP_TABLE"
+          encrypt        = true
+          HEREDOC_EOF
           fi
 
           echo "Created backend config file: $ENVIRONMENT.hcl"
