@@ -79,7 +79,8 @@ jobs:
       # 5a. Initialize Terraform on github runner
       - name: Init Terraform (Global)
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
-        run: terraform init -backend-config=${{ env.ENVIRONMENT }}.hcl -reconfigure
+        working-directory: infrastructure/backend/global
+        run: terraform init -backend-config=../../${{ env.ENVIRONMENT }}.hcl -reconfigure
 
       # 5b. Initialize Terraform on github runner
       - name: Init Terraform (Environment)
