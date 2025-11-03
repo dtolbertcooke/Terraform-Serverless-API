@@ -53,37 +53,22 @@ jobs:
       # 3. Fetch backend config from SSM Parameter Store
       # - Retrieves global S3/DynamoDB state backend
       # - Creates backend config file for terraform init
-      - name: Fetch Backend Config from SSM Parameter Store
+      - name: Fetch Backend Config from SSM
         run: |
           STATE_BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-bucket" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
-          STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }} 2>/dev/null || echo "")
-          APP_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/app-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }} 2>/dev/null || echo "")
+          STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
           REGION=$(aws ssm get-parameter --name "/tf/global-infra/backend/region" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
 
+          echo "STATE_BUCKET=$STATE_BUCKET" >> $GITHUB_ENV
           echo "STATE_TABLE=$STATE_TABLE" >> $GITHUB_ENV
-          echo "APP_TABLE=$APP_TABLE" >> $GITHUB_ENV
-          echo "TF_VAR_state_bucket_name=$STATE_BUCKET" >> $GITHUB_ENV
 
-          # Choose which DynamoDB table to use based on environment
-          if [ "$ENVIRONMENT" = "global-infra" ]; then
-            echo "Using $STATE_TABLE to destroy $ENVIRONMENT backend"
-            cat > "$ENVIRONMENT.hcl" <<EOF
-            bucket         = "$STATE_BUCKET"
-            key            = "$ENVIRONMENT/terraform.tfstate"
-            region         = "$REGION"
-            dynamodb_table = "$STATE_TABLE"
-            encrypt        = true
+          cat > ${ENVIRONMENT}.hcl <<EOF
+          bucket         = "$STATE_BUCKET"
+          key            = "$ENVIRONMENT/terraform.tfstate"
+          region         = "$REGION"
+          dynamodb_table = "$STATE_TABLE"
+          encrypt        = true
           EOF
-          else
-            echo "Using $APP_TABLE to destroy $ENVIRONMENT backend"
-            cat > "$ENVIRONMENT.hcl" <<EOF
-            bucket         = "$STATE_BUCKET"
-            key            = "$ENVIRONMENT/terraform.tfstate"
-            region         = "$REGION"
-            dynamodb_table = "$APP_TABLE"
-            encrypt        = true
-          EOF
-          fi
 
       # 4. Install Terraform
       - name: Setup Terraform
@@ -95,7 +80,7 @@ jobs:
       - name: Init Terraform (Global)
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
         working-directory: infrastructure/backend/global
-        run: terraform init -backend-config=${{ env.ENVIRONMENT }}.hcl
+        run: terraform init -backend-config=${{ env.ENVIRONMENT }}.hcl -reconfigure
 
       # 5b. Initialize Terraform on github runner
       - name: Init Terraform (Environment)
