@@ -281,10 +281,10 @@ resource "aws_iam_policy" "github_actions_policy" {
         Effect = "Allow"
         Action = ["ssm:GetParameters", "ssm:GetParameter", "ssm:PutParameter", "ssm:DeleteParameter"]
         Resource = [
-          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/bucket",
-          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/region",
-          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/table",
-          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/db_table"
+          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/state-bucket",
+          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/state-table",
+          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/app-table",
+          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/region"
         ]
       },
       {
