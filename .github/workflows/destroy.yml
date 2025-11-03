@@ -122,7 +122,7 @@ jobs:
       # 7b. Destroy resources
       - name: Destroy (Environment)
         if: ${{ env.ENVIRONMENT != 'global-infra' }}
-        run: terraform destroy -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve
+        run: terraform destroy -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve -lock=false # -lock=false to avoid locking issues on destroy
 
       # 8. Remove backend config from SSM Parameter store
       - name: Remove Backend Config from SSM Parameter Store
