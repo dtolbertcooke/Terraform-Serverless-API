@@ -191,8 +191,8 @@ jobs:
       # - Creates backend config file for terraform init
       - name: Fetch Backend Config
         run: |
-          STATE_BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/bucket" --query "Parameter.Value" --output text)
-          STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/table" --query "Parameter.Value" --output text)
+          STATE_BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-bucket" --query "Parameter.Value" --output text)
+          STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-table" --query "Parameter.Value" --output text)
           REGION=$(aws ssm get-parameter --name "/tf/global-infra/backend/region" --query "Parameter.Value" --output text)
           echo "TF_VAR_state_bucket_name=$STATE_BUCKET" >> $GITHUB_ENV
 
