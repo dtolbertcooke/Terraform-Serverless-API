@@ -59,6 +59,7 @@ jobs:
           STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }} 2>/dev/null || echo "") # ignores if not found
           REGION=$(aws ssm get-parameter --name "/tf/global-infra/backend/region" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
           echo "STATE_TABLE=$STATE_TABLE" >> $GITHUB_ENV # export for 'Disable deletion protection (Environment)' step
+          echo "TF_VAR_state_bucket_name=$STATE_BUCKET" >> $GITHUB_ENV
 
           cat > ${{ env.ENVIRONMENT }}.hcl <<EOF
           bucket         = "$STATE_BUCKET"
