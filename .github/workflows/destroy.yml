@@ -56,33 +56,34 @@ jobs:
       - name: Fetch Backend Config from SSM Parameter Store
         run: |
           STATE_BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-bucket" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
-          STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }} 2>/dev/null || echo "") # ignores if not found
-          APP_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/app-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }} 2>/dev/null || echo "") # ignores if not found
+          STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }} 2>/dev/null || echo "")
+          APP_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/app-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }} 2>/dev/null || echo "")
           REGION=$(aws ssm get-parameter --name "/tf/global-infra/backend/region" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
-          echo "STATE_TABLE=$STATE_TABLE" >> $GITHUB_ENV # export for 'Disable deletion protection (Global)' step
-          echo "APP_TABLE=$APP_TABLE" >> $GITHUB_ENV # export for 'Disable deletion protection (Environment)' step
+
+          echo "STATE_TABLE=$STATE_TABLE" >> $GITHUB_ENV
+          echo "APP_TABLE=$APP_TABLE" >> $GITHUB_ENV
           echo "TF_VAR_state_bucket_name=$STATE_BUCKET" >> $GITHUB_ENV
 
-          # Choose which db table to use based on environment
+          # Choose which DynamoDB table to use based on environment
           if [ "$ENVIRONMENT" = "global-infra" ]; then
             echo "Using $STATE_TABLE to destroy $ENVIRONMENT backend"
-            cat > $ENVIRONMENT.hcl <<EOF
+            cat > "$ENVIRONMENT.hcl" <<EOF
             bucket         = "$STATE_BUCKET"
             key            = "$ENVIRONMENT/terraform.tfstate"
             region         = "$REGION"
             dynamodb_table = "$STATE_TABLE"
             encrypt        = true
-            EOF
+          EOF
           else
             echo "Using $APP_TABLE to destroy $ENVIRONMENT backend"
-            cat > $ENVIRONMENT.hcl <<EOF
+            cat > "$ENVIRONMENT.hcl" <<EOF
             bucket         = "$STATE_BUCKET"
             key            = "$ENVIRONMENT/terraform.tfstate"
             region         = "$REGION"
             dynamodb_table = "$APP_TABLE"
             encrypt        = true
-            EOF
-            fi
+          EOF
+          fi
 
       # 4. Install Terraform
       - name: Setup Terraform
@@ -101,15 +102,15 @@ jobs:
         if: ${{ env.ENVIRONMENT != 'global-infra' }}
         run: terraform init -backend-config=${{ env.ENVIRONMENT }}.hcl
 
-        # 6a. Disable deletion protection (if enabled)
-        # - get state table from .tfvars file
+      # 6a. Disable deletion protection (if enabled)
+      # - get state table from .tfvars file
       - name: Disable deletion protection (Global)
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
         working-directory: infrastructure/backend/global
         run: aws dynamodb update-table --table-name $STATE_TABLE --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
 
-        # 6b. Disable deletion protection (if enabled)
-        # - get app table from SSM Parameter Store
+      # 6b. Disable deletion protection (if enabled)
+      # - get app table from SSM Parameter Store
       - name: Disable deletion protection (Environment)
         if: ${{ env.ENVIRONMENT != 'global-infra' }}
         run: aws dynamodb update-table --table-name $STATE_TABLE --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
