@@ -56,15 +56,15 @@ jobs:
       - name: Fetch Backend Config from SSM Parameter Store
         run: |
           STATE_BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-bucket" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
-          APP_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/app-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }} 2>/dev/null || echo "") # ignores if not found
+          STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }} 2>/dev/null || echo "") # ignores if not found
           REGION=$(aws ssm get-parameter --name "/tf/global-infra/backend/region" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
-          echo "APP_TABLE=$APP_TABLE" >> $GITHUB_ENV # export for 'Disable deletion protection (Environment)' step
+          echo "STATE_TABLE=$STATE_TABLE" >> $GITHUB_ENV # export for 'Disable deletion protection (Environment)' step
 
           cat > ${{ env.ENVIRONMENT }}.hcl <<EOF
           bucket         = "$STATE_BUCKET"
           key            = "${{ env.ENVIRONMENT }}/terraform.tfstate"
           region         = "$REGION"
-          dynamodb_table = "$APP_TABLE"
+          dynamodb_table = "$STATE_TABLE"
           encrypt        = true
           EOF
 
