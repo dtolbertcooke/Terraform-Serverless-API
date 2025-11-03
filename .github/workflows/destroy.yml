@@ -61,6 +61,7 @@ jobs:
 
           echo "STATE_BUCKET=$STATE_BUCKET" >> $GITHUB_ENV
           echo "STATE_TABLE=$STATE_TABLE" >> $GITHUB_ENV
+          echo "REGION=$REGION" >> $GITHUB_ENV
 
           cat > ${ENVIRONMENT}.hcl <<EOF
           bucket         = "$STATE_BUCKET"
@@ -100,13 +101,34 @@ jobs:
         if: ${{ env.ENVIRONMENT != 'global-infra' }}
         run: aws dynamodb update-table --table-name $STATE_TABLE --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
 
+      # Empty State bucket before destroy
+      - name: Empty State Bucket (Global)
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
+        run: |
+          echo "Emptying State Bucket: $STATE_BUCKET"
+          aws s3api delete-objects \
+            --bucket $STATE_BUCKET \
+            --delete "$(aws s3api list-object-versions \
+            --bucket $STATE_BUCKET \
+            --output=json \
+            --query='{Objects: Versions.{Key:Key,VersionId:VersionId}}')"
+
       # 7a. Destroy resources
       - name: Destroy (Global)
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
         working-directory: infrastructure/backend/global
-        run: terraform destroy -var-file=${{ env.ENVIRONMENT }}.tfvars -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve
+        run: terraform destroy -var-file=${{ env.ENVIRONMENT }}.tfvars -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve -lock=false # -lock=false to avoid locking issues on destroy
 
       # 7b. Destroy resources
       - name: Destroy (Environment)
         if: ${{ env.ENVIRONMENT != 'global-infra' }}
         run: terraform destroy -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve
+
+      # 8. Remove backend config from SSM Parameter store
+      - name: Remove Backend Config from SSM Parameter Store
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
+        run: |
+          aws ssm delete-parameter --name "/tf/global-infra/backend/$STATE_BUCKET"
+          aws ssm delete-parameter --name "/tf/global-infra/backend/$STATE_TABLE"
+          aws ssm delete-parameter --name "/tf/global-infra/backend/$REGION"
+          echo "Removed backend parameters from SSM Parameter Store."

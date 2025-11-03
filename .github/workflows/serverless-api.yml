@@ -225,10 +225,3 @@ jobs:
       # Install jq for parsing JSON outputs
       - name: Install jq
         run: sudo apt-get install -y jq
-
-      # Store app db table in SSM Parameter Store
-      - name: Store App DB Table in AWS SSM
-        run: |
-          APP_TABLE=$(jq -r '.db_app_table_name.value' tf_outputs.json)
-
-          aws ssm put-parameter --name "/tf/global-infra/backend/app-table"  --value "$APP_TABLE"  --type String --overwrite
