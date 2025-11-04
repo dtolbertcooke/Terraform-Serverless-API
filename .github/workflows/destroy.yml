@@ -110,22 +110,42 @@ jobs:
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
         run: |
           echo "Emptying State Bucket: $STATE_BUCKET"
+
           # Delete all current objects
-          aws s3 rm s3://$STATE_BUCKET --recursive
+          echo "Deleting current objects..."
+          aws s3 rm s3://$STATE_BUCKET --recursive || echo "Bucket already empty"
 
-          # Delete all object versions
-          aws s3api delete-objects --bucket $STATE_BUCKET \
-            --delete "$(aws s3api list-object-versions \
+          # Delete all object versions (if any)
+          echo "Checking for object versions..."
+          VERSIONS=$(aws s3api list-object-versions --bucket $STATE_BUCKET --query 'Versions' --output json)
+          if [ "$VERSIONS" != "[]" ] && [ "$VERSIONS" != "null" ]; then
+            echo "Deleting object versions..."
+            aws s3api delete-objects \
               --bucket $STATE_BUCKET \
-              --output json \
-              --query='{Objects: Versions[?Key!=null].{Key:Key,VersionId:VersionId}}')"
+              --delete "$(aws s3api list-object-versions \
+                --bucket $STATE_BUCKET \
+                --output json \
+                --query='{Objects: Versions[?Key!=null].{Key:Key,VersionId:VersionId}}')" || true
+          else
+            echo "No object versions found."
+          fi
 
-          # Delete all delete markers
-          aws s3api delete-objects --bucket $STATE_BUCKET \
-            --delete "$(aws s3api list-object-versions \
+          # Delete all delete markers (if any)
+          echo "Checking for delete markers..."
+          DELETE_MARKERS=$(aws s3api list-object-versions --bucket $STATE_BUCKET --query 'DeleteMarkers' --output json)
+          if [ "$DELETE_MARKERS" != "[]" ] && [ "$DELETE_MARKERS" != "null" ]; then
+            echo "Deleting delete markers..."
+            aws s3api delete-objects \
               --bucket $STATE_BUCKET \
-              --output json \
-              --query='{Objects: DeleteMarkers[?Key!=null].{Key:Key,VersionId:VersionId}}')"
+              --delete "$(aws s3api list-object-versions \
+                --bucket $STATE_BUCKET \
+                --output json \
+                --query='{Objects: DeleteMarkers[?Key!=null].{Key:Key,VersionId:VersionId}}')" || true
+          else
+            echo "No delete markers found."
+          fi
+
+          echo "S3 bucket $STATE_BUCKET emptied successfully."
 
       # 6c. Debug step
       - name: Show Terraform State (Global)
