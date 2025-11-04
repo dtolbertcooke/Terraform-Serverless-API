@@ -57,10 +57,12 @@ jobs:
         run: |
           STATE_BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-bucket" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
           STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
+          APP_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/app-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
           REGION=$(aws ssm get-parameter --name "/tf/global-infra/backend/region" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
 
           echo "STATE_BUCKET=$STATE_BUCKET" >> $GITHUB_ENV
           echo "STATE_TABLE=$STATE_TABLE" >> $GITHUB_ENV
+          echo "APP_TABLE=$APP_TABLE" >> $GITHUB_ENV
           echo "REGION=$REGION" >> $GITHUB_ENV
 
           echo "TF_VAR_state_bucket_name=$STATE_BUCKET" >> $GITHUB_ENV
@@ -101,7 +103,7 @@ jobs:
       # - get app table from SSM Parameter Store
       - name: Disable deletion protection (Environment)
         if: ${{ env.ENVIRONMENT != 'global-infra' }}
-        run: aws dynamodb update-table --table-name $STATE_TABLE --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
+        run: aws dynamodb update-table --table-name $APP_TABLE --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
 
       # Empty State bucket before destroy
       - name: Empty State Bucket (Global)
