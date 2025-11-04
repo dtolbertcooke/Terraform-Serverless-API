@@ -111,7 +111,7 @@ jobs:
         run: |
           echo 'Reconfiguring Terraform to use local backend...'
           # Remove existing backend settings and migrate state locally
-          terraform init -migrate-state -force-copy -backend-config="path=./terraform.tfstate" -reconfigure
+          terraform init -migrate-state -force-copy -backend-config="path=./terraform.tfstate"
 
       # Empty State bucket before destroy
       - name: Empty State Bucket (Global)
