@@ -81,6 +81,19 @@ jobs:
         with:
           terraform_version: "1.12.2" # Pin to specific version
 
+      # create remote backend for global-infra
+      - name: Create Remote Backend Config (Global)
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
+        working-directory: infrastructure/backend/global
+        run: |
+          touch remote-state.tf
+          cat > remote-state.tf <<EOF
+          terraform {
+            backend "s3" {
+            }
+          }
+          EOF
+
       # Attach global backend
       - name: Init Terraform (Global)
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
