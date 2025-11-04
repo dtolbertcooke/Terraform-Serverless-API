@@ -110,12 +110,22 @@ jobs:
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
         run: |
           echo "Emptying State Bucket: $STATE_BUCKET"
-          aws s3api delete-objects \
-            --bucket $STATE_BUCKET \
+          # Delete all current objects
+          aws s3 rm s3://$STATE_BUCKET --recursive
+
+          # Delete all object versions
+          aws s3api delete-objects --bucket $STATE_BUCKET \
             --delete "$(aws s3api list-object-versions \
-            --bucket $STATE_BUCKET \
-            --output=json \
-            --query='{Objects: Versions.{Key:Key,VersionId:VersionId}}')"
+              --bucket $STATE_BUCKET \
+              --output json \
+              --query='{Objects: Versions[?Key!=null].{Key:Key,VersionId:VersionId}}')"
+
+          # Delete all delete markers
+          aws s3api delete-objects --bucket $STATE_BUCKET \
+            --delete "$(aws s3api list-object-versions \
+              --bucket $STATE_BUCKET \
+              --output json \
+              --query='{Objects: DeleteMarkers[?Key!=null].{Key:Key,VersionId:VersionId}}')"
 
       # 7a. Destroy resources
       - name: Destroy (Global)
