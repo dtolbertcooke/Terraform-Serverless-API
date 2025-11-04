@@ -81,8 +81,20 @@ jobs:
         with:
           terraform_version: "1.12.2" # Pin to specific version
 
+      - name: Init Terraform (Global)
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
+        working-directory: infrastructure/backend/global
+        run: terraform init -backend-config=../../${{ env.ENVIRONMENT }}.hcl -reconfigure
+
+      # 5b. Refresh remote state to pull all real resources
+      - name: Refresh Terraform State (Global)
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
+        working-directory: infrastructure/backend/global
+        run: terraform refresh -lock=false
+
       # 5a. Initialize Terraform on github runner
       - name: Init Terraform (Global)
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
         working-directory: infrastructure/backend/global
         run: terraform init -migrate-state -force-copy -backend-config="path=./terraform.tfstate"
 
