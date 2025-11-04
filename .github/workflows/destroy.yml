@@ -127,11 +127,32 @@ jobs:
               --output json \
               --query='{Objects: DeleteMarkers[?Key!=null].{Key:Key,VersionId:VersionId}}')"
 
+      # 6c. Debug step
+      - name: Show Terraform State (Global)
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
+        working-directory: infrastructure/backend/global
+        run: |
+          echo "=== Terraform State List ==="
+          terraform state list || echo "No state file or empty state"
+
+          echo "=== Terraform Plan Destroy ==="
+          terraform plan -destroy -var-file=${{ env.ENVIRONMENT }}.tfvars -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" || echo "Plan failed"
+
       # 7a. Destroy resources
       - name: Destroy (Global)
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
         working-directory: infrastructure/backend/global
         run: terraform destroy -var-file=${{ env.ENVIRONMENT }}.tfvars -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve -lock=false # -lock=false to avoid locking issues on destroy
+
+      # 6d. Check what Terraform knows about (Debug step)
+      - name: Show Terraform State (Environment)
+        if: ${{ env.ENVIRONMENT != 'global-infra' }}
+        run: |
+          echo "=== Terraform State List ==="
+          terraform state list || echo "No state file or empty state"
+
+          echo "=== Terraform Plan Destroy ==="
+          terraform plan -destroy -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" || echo "Plan failed"
 
       # 7b. Destroy resources
       - name: Destroy (Environment)
@@ -142,7 +163,8 @@ jobs:
       - name: Remove Backend Config from SSM Parameter Store
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
         run: |
-          aws ssm delete-parameter --name "/tf/global-infra/backend/$STATE_BUCKET"
-          aws ssm delete-parameter --name "/tf/global-infra/backend/$STATE_TABLE"
-          aws ssm delete-parameter --name "/tf/global-infra/backend/$REGION"
+          aws ssm delete-parameter --name "/tf/global-infra/backend/state-bucket" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
+          aws ssm delete-parameter --name "/tf/global-infra/backend/state-table" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
+          aws ssm delete-parameter --name "/tf/global-infra/backend/app-table" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
+          aws ssm delete-parameter --name "/tf/global-infra/backend/region" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
           echo "Removed backend parameters from SSM Parameter Store."
