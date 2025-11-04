@@ -67,7 +67,7 @@ jobs:
 
           echo "TF_VAR_state_bucket_name=$STATE_BUCKET" >> $GITHUB_ENV
 
-          cat > ${ENVIRONMENT}.hcl <<EOF
+          cat > $ENVIRONMENT.hcl <<EOF
           bucket         = "$STATE_BUCKET"
           key            = "$ENVIRONMENT/terraform.tfstate"
           region         = "$REGION"
