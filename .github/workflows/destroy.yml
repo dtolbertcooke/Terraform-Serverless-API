@@ -118,13 +118,7 @@ jobs:
         if: ${{ env.ENVIRONMENT != 'global-infra' }}
         run: aws dynamodb update-table --table-name $APP_TABLE --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
 
-      # 7a. Destroy resources
-      - name: Destroy (Global)
-        if: ${{ env.ENVIRONMENT == 'global-infra' }}
-        working-directory: infrastructure/backend/global
-        run: terraform destroy -var-file=${{ env.ENVIRONMENT }}.tfvars -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve -lock=false # -lock=false to avoid locking issues on destroy
-
-      # Empty State bucket before destroy
+      # Empty State bucket after destroy
       - name: Empty State Bucket (Global)
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
         run: |
@@ -165,6 +159,12 @@ jobs:
           fi
 
           echo "S3 bucket $STATE_BUCKET emptied successfully."
+
+      # 7a. Destroy resources
+      - name: Destroy (Global)
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
+        working-directory: infrastructure/backend/global
+        run: terraform destroy -var-file=${{ env.ENVIRONMENT }}.tfvars -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve -lock=false # -lock=false to avoid locking issues on destroy
 
       # 9. Final cleanup - Delete state bucket & table
       - name: Delete State Bucket & Table
