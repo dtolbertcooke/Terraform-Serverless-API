@@ -90,7 +90,7 @@ jobs:
       - name: Refresh Terraform State (Global)
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
         working-directory: infrastructure/backend/global
-        run: terraform refresh -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -lock=false
+        run: terraform refresh -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -var-file=${{ env.ENVIRONMENT }}.tfvars -lock=false
 
       # 5a. Initialize Terraform on github runner
       - name: Init Terraform (Global)
