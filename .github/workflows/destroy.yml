@@ -81,22 +81,11 @@ jobs:
         with:
           terraform_version: "1.12.2" # Pin to specific version
 
+      # Attach global backend
       - name: Init Terraform (Global)
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
         working-directory: infrastructure/backend/global
         run: terraform init -backend-config=../../${{ env.ENVIRONMENT }}.hcl -reconfigure
-
-      # 5b. Refresh remote state to pull all real resources
-      - name: Refresh Terraform State (Global)
-        if: ${{ env.ENVIRONMENT == 'global-infra' }}
-        working-directory: infrastructure/backend/global
-        run: terraform refresh -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -var-file=${{ env.ENVIRONMENT }}.tfvars -lock=false
-
-      # 5a. Initialize Terraform on github runner
-      - name: Init Terraform (Global)
-        if: ${{ env.ENVIRONMENT == 'global-infra' }}
-        working-directory: infrastructure/backend/global
-        run: terraform init -migrate-state -force-copy -backend-config="path=./terraform.tfstate"
 
       # 5b. Initialize Terraform on github runner
       - name: Init Terraform (Environment)
@@ -116,81 +105,81 @@ jobs:
         if: ${{ env.ENVIRONMENT != 'global-infra' }}
         run: aws dynamodb update-table --table-name $APP_TABLE --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
 
-      # Empty State bucket before destroy
-      - name: Empty State Bucket (Global)
-        if: ${{ env.ENVIRONMENT == 'global-infra' }}
-        run: |
-          echo "Emptying State Bucket: $STATE_BUCKET"
+      # uncomment after testing
+      # # Empty State bucket before destroy
+      # - name: Empty State Bucket (Global)
+      #   if: ${{ env.ENVIRONMENT == 'global-infra' }}
+      #   run: |
+      #     echo "Emptying State Bucket: $STATE_BUCKET"
 
-          # Delete all current objects
-          echo "Deleting current objects..."
-          aws s3 rm s3://$STATE_BUCKET --recursive || echo "Bucket already empty"
+      #     # Delete all current objects
+      #     echo "Deleting current objects..."
+      #     aws s3 rm s3://$STATE_BUCKET --recursive || echo "Bucket already empty"
 
-          # Delete all object versions (if any)
-          echo "Checking for object versions..."
-          VERSIONS=$(aws s3api list-object-versions --bucket $STATE_BUCKET --query 'Versions' --output json)
-          if [ "$VERSIONS" != "[]" ] && [ "$VERSIONS" != "null" ]; then
-            echo "Deleting object versions..."
-            aws s3api delete-objects \
-              --bucket $STATE_BUCKET \
-              --delete "$(aws s3api list-object-versions \
-                --bucket $STATE_BUCKET \
-                --output json \
-                --query='{Objects: Versions[?Key!=null].{Key:Key,VersionId:VersionId}}')" || true
-          else
-            echo "No object versions found."
-          fi
+      #     # Delete all object versions (if any)
+      #     echo "Checking for object versions..."
+      #     VERSIONS=$(aws s3api list-object-versions --bucket $STATE_BUCKET --query 'Versions' --output json)
+      #     if [ "$VERSIONS" != "[]" ] && [ "$VERSIONS" != "null" ]; then
+      #       echo "Deleting object versions..."
+      #       aws s3api delete-objects \
+      #         --bucket $STATE_BUCKET \
+      #         --delete "$(aws s3api list-object-versions \
+      #           --bucket $STATE_BUCKET \
+      #           --output json \
+      #           --query='{Objects: Versions[?Key!=null].{Key:Key,VersionId:VersionId}}')" || true
+      #     else
+      #       echo "No object versions found."
+      #     fi
 
-          # Delete all delete markers (if any)
-          echo "Checking for delete markers..."
-          DELETE_MARKERS=$(aws s3api list-object-versions --bucket $STATE_BUCKET --query 'DeleteMarkers' --output json)
-          if [ "$DELETE_MARKERS" != "[]" ] && [ "$DELETE_MARKERS" != "null" ]; then
-            echo "Deleting delete markers..."
-            aws s3api delete-objects \
-              --bucket $STATE_BUCKET \
-              --delete "$(aws s3api list-object-versions \
-                --bucket $STATE_BUCKET \
-                --output json \
-                --query='{Objects: DeleteMarkers[?Key!=null].{Key:Key,VersionId:VersionId}}')" || true
-          else
-            echo "No delete markers found."
-          fi
+      #     # Delete all delete markers (if any)
+      #     echo "Checking for delete markers..."
+      #     DELETE_MARKERS=$(aws s3api list-object-versions --bucket $STATE_BUCKET --query 'DeleteMarkers' --output json)
+      #     if [ "$DELETE_MARKERS" != "[]" ] && [ "$DELETE_MARKERS" != "null" ]; then
+      #       echo "Deleting delete markers..."
+      #       aws s3api delete-objects \
+      #         --bucket $STATE_BUCKET \
+      #         --delete "$(aws s3api list-object-versions \
+      #           --bucket $STATE_BUCKET \
+      #           --output json \
+      #           --query='{Objects: DeleteMarkers[?Key!=null].{Key:Key,VersionId:VersionId}}')" || true
+      #     else
+      #       echo "No delete markers found."
+      #     fi
 
-          echo "S3 bucket $STATE_BUCKET emptied successfully."
+      #     echo "S3 bucket $STATE_BUCKET emptied successfully."
 
       # 7a. Destroy resources
       - name: Destroy (Global)
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
         working-directory: infrastructure/backend/global
-        run: terraform destroy -var-file=${{ env.ENVIRONMENT }}.tfvars -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve -lock=false # -lock=false to avoid locking issues on destroy
+        run: terraform destroy -var-file=${{ env.ENVIRONMENT }}.tfvars -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve # -lock=false # -lock=false to avoid locking issues on destroy
 
-      # 9. Delete the global backend resources manually (S3 + DynamoDB)
-      - name: Delete Global Backend Resources
-        if: ${{ env.ENVIRONMENT == 'global-infra' }}
-        run: |
-          echo "Deleting backend resources for $STATE_BUCKET and $STATE_TABLE..."
-
-          # 1. Delete S3 bucket
-          echo "Deleting S3 bucket..."
-          aws s3api delete-bucket --bucket $STATE_BUCKET --region $REGION || echo "Bucket already deleted or not found"
-
-          # 2. Delete DynamoDB lock table
-          echo "Deleting DynamoDB lock table..."
-          aws dynamodb delete-table --table-name $STATE_TABLE --region $REGION || echo "Table already deleted or not found"
-
-          echo "Global backend infrastructure destroyed."
-
+      # uncomment after testing
+      # # 9. Delete the global backend resources manually (S3 + DynamoDB)
+      # - name: Delete Global Backend Resources
+      #   if: ${{ env.ENVIRONMENT == 'global-infra' }}
+      #   run: |
+      #     echo "Deleting backend resources for $STATE_BUCKET and $STATE_TABLE..."
+      #     # 1. Delete S3 bucket
+      #     echo "Deleting S3 bucket..."
+      #     aws s3api delete-bucket --bucket $STATE_BUCKET --region $REGION || echo "Bucket already deleted or not found"
+      #     # 2. Delete DynamoDB lock table
+      #     echo "Deleting DynamoDB lock table..."
+      #     aws dynamodb delete-table --table-name $STATE_TABLE --region $REGION || echo "Table already deleted or not found"
+      #     echo "Global backend infrastructure destroyed."
       # 7b. Destroy resources
       - name: Destroy (Environment)
         if: ${{ env.ENVIRONMENT != 'global-infra' }}
         run: terraform destroy -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve -lock=false # -lock=false to avoid locking issues on destroy
 
-      # 8. Remove backend config from SSM Parameter store
-      - name: Remove Backend Config from SSM Parameter Store
-        if: ${{ env.ENVIRONMENT == 'global-infra' }}
-        run: |
-          aws ssm delete-parameter --name "/tf/global-infra/backend/state-bucket" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
-          aws ssm delete-parameter --name "/tf/global-infra/backend/state-table" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
-          aws ssm delete-parameter --name "/tf/global-infra/backend/app-table" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
-          aws ssm delete-parameter --name "/tf/global-infra/backend/region" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
-          echo "Removed backend parameters from SSM Parameter Store."
+
+        # uncomment after testing
+# # 8. Remove backend config from SSM Parameter store (Global)
+# - name: Remove Backend Config from SSM Parameter Store
+#   if: ${{ env.ENVIRONMENT == 'global-infra' }}
+#   run: |
+#     aws ssm delete-parameter --name "/tf/global-infra/backend/state-bucket" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
+#     aws ssm delete-parameter --name "/tf/global-infra/backend/state-table" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
+#     aws ssm delete-parameter --name "/tf/global-infra/backend/app-table" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
+#     aws ssm delete-parameter --name "/tf/global-infra/backend/region" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
+#     echo "Removed backend parameters from SSM Parameter Store."
