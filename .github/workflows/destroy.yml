@@ -83,9 +83,8 @@ jobs:
 
       # 5a. Initialize Terraform on github runner
       - name: Init Terraform (Global)
-        if: ${{ env.ENVIRONMENT == 'global-infra' }}
         working-directory: infrastructure/backend/global
-        run: terraform init
+        run: terraform init -backend-config=../../${{ env.ENVIRONMENT }}.hcl -reconfigure
 
       # 5b. Initialize Terraform on github runner
       - name: Init Terraform (Environment)
@@ -104,6 +103,15 @@ jobs:
       - name: Disable deletion protection (Environment)
         if: ${{ env.ENVIRONMENT != 'global-infra' }}
         run: aws dynamodb update-table --table-name $APP_TABLE --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
+
+      # Migrate state to local backend before destroying global-infra
+      - name: Migrate Terraform state to Local (Global)
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
+        working-directory: infrastructure/backend/global
+        run: |
+          echo 'Reconfiguring Terraform to use local backend...'
+          # Remove existing backend settings and migrate state locally
+          terraform init -migrate-state -force-copy -backend-config="path=./terraform.tfstate" -reconfigure
 
       # Empty State bucket before destroy
       - name: Empty State Bucket (Global)
@@ -147,36 +155,27 @@ jobs:
 
           echo "S3 bucket $STATE_BUCKET emptied successfully."
 
-      # 6c. Check if resources exist in Terraform state
-      - name: Check Terraform State (Global)
-        if: ${{ env.ENVIRONMENT == 'global-infra' }}
-        working-directory: infrastructure/backend/global
-        run: |
-          if terraform state list > /dev/null 2>&1; then
-            echo "Terraform state found - resources will be destroyed"
-            terraform state list
-          else
-            echo "No Terraform state found - resources may have been created outside of Terraform or already destroyed"
-            echo "Skipping Terraform destroy but will continue with manual cleanup"
-          fi
-
       # 7a. Destroy resources
       - name: Destroy (Global)
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
         working-directory: infrastructure/backend/global
         run: terraform destroy -var-file=${{ env.ENVIRONMENT }}.tfvars -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve -lock=false # -lock=false to avoid locking issues on destroy
 
-      # 6d. Check if resources exist in Terraform state
-      - name: Check Terraform State (Environment)
-        if: ${{ env.ENVIRONMENT != 'global-infra' }}
+      # 9. Delete the global backend resources manually (S3 + DynamoDB)
+      - name: Delete Global Backend Resources
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
         run: |
-          if terraform state list > /dev/null 2>&1; then
-            echo "Terraform state found - resources will be destroyed"
-            terraform state list
-          else
-            echo "No Terraform state found - resources may have been created outside of Terraform or already destroyed"
-            echo "Skipping Terraform destroy but will continue with cleanup"
-          fi
+          echo "Deleting backend resources for $STATE_BUCKET and $STATE_TABLE..."
+
+          # 1. Delete S3 bucket
+          echo "Deleting S3 bucket..."
+          aws s3api delete-bucket --bucket $STATE_BUCKET --region $REGION || echo "Bucket already deleted or not found"
+
+          # 2. Delete DynamoDB lock table
+          echo "Deleting DynamoDB lock table..."
+          aws dynamodb delete-table --table-name $STATE_TABLE --region $REGION || echo "Table already deleted or not found"
+
+          echo "Global backend infrastructure destroyed."
 
       # 7b. Destroy resources
       - name: Destroy (Environment)
