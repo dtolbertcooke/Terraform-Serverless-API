@@ -57,7 +57,7 @@ jobs:
         run: |
           STATE_BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-bucket" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
           STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
-          APP_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/app-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
+          APP_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/app-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }} 2>/dev/null || echo "") # Handle case where app table doesn't exist (destroy global-infra before main infra)
           REGION=$(aws ssm get-parameter --name "/tf/global-infra/backend/region" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
 
           echo "STATE_BUCKET=$STATE_BUCKET" >> $GITHUB_ENV
@@ -67,7 +67,7 @@ jobs:
 
           echo "TF_VAR_state_bucket_name=$STATE_BUCKET" >> $GITHUB_ENV
 
-          cat > ${ENVIRONMENT}.hcl <<EOF
+          cat > $ENVIRONMENT.hcl <<EOF
           bucket         = "$STATE_BUCKET"
           key            = "$ENVIRONMENT/terraform.tfstate"
           region         = "$REGION"
@@ -81,14 +81,38 @@ jobs:
         with:
           terraform_version: "1.12.2" # Pin to specific version
 
-      # 5a. Initialize Terraform on github runner
-      - name: Init Terraform (Global)
+      # create remote backend for global-infra
+      - name: Create Remote Backend Config (Global)
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
+        working-directory: infrastructure/backend/global
+        run: |
+          touch remote-state.tf
+          cat > remote-state.tf <<EOF
+          terraform {
+            backend "s3" {
+            }
+          }
+          EOF
+
+      # Attach global backend
+      - name: Terraform Init (Global)
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
         working-directory: infrastructure/backend/global
         run: terraform init -backend-config=../../${{ env.ENVIRONMENT }}.hcl -reconfigure
 
+      # Migrate state to local before destroying backend
+      - name: Migrate State to Local (Global)
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
+        working-directory: infrastructure/backend/global
+        run: |
+          echo "Migrating Terraform state from S3 to local before destroying backend..."
+          # Remove the remote backend configuration temporarily
+          rm -f remote-state.tf
+          # Reinitialize with local backend, migrating state
+          terraform init -migrate-state -force-copy
+
       # 5b. Initialize Terraform on github runner
-      - name: Init Terraform (Environment)
+      - name: Terraform Init (Environment)
         if: ${{ env.ENVIRONMENT != 'global-infra' }}
         run: terraform init -backend-config=${{ env.ENVIRONMENT }}.hcl
 
@@ -105,18 +129,6 @@ jobs:
         if: ${{ env.ENVIRONMENT != 'global-infra' }}
         run: aws dynamodb update-table --table-name $APP_TABLE --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
 
-      # Empty State bucket before destroy
-      - name: Empty State Bucket (Global)
-        if: ${{ env.ENVIRONMENT == 'global-infra' }}
-        run: |
-          echo "Emptying State Bucket: $STATE_BUCKET"
-          aws s3api delete-objects \
-            --bucket $STATE_BUCKET \
-            --delete "$(aws s3api list-object-versions \
-            --bucket $STATE_BUCKET \
-            --output=json \
-            --query='{Objects: Versions.{Key:Key,VersionId:VersionId}}')"
-
       # 7a. Destroy resources
       - name: Destroy (Global)
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
@@ -128,11 +140,12 @@ jobs:
         if: ${{ env.ENVIRONMENT != 'global-infra' }}
         run: terraform destroy -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve -lock=false # -lock=false to avoid locking issues on destroy
 
-      # 8. Remove backend config from SSM Parameter store
+      # 8. Remove backend config from SSM Parameter store (Global)
       - name: Remove Backend Config from SSM Parameter Store
         if: ${{ env.ENVIRONMENT == 'global-infra' }}
         run: |
-          aws ssm delete-parameter --name "/tf/global-infra/backend/$STATE_BUCKET"
-          aws ssm delete-parameter --name "/tf/global-infra/backend/$STATE_TABLE"
-          aws ssm delete-parameter --name "/tf/global-infra/backend/$REGION"
+          aws ssm delete-parameter --name "/tf/global-infra/backend/state-bucket" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
+          aws ssm delete-parameter --name "/tf/global-infra/backend/state-table" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
+          aws ssm delete-parameter --name "/tf/global-infra/backend/app-table" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
+          aws ssm delete-parameter --name "/tf/global-infra/backend/region" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
           echo "Removed backend parameters from SSM Parameter Store."

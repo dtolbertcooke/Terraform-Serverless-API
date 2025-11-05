@@ -1,4 +1,8 @@
 # api gateway role for logs
+# NOTE: This resource only manages Terraform state. 
+# Account level API Gateway CloudWatch role settings persist after Terraform destroy.
+# This is normal behavior and the warning received once this resource is destroyed 
+# can safely be ignored.
 resource "aws_api_gateway_account" "api_gateway_role" {
   cloudwatch_role_arn = var.api_gateway_role_arn
 }
