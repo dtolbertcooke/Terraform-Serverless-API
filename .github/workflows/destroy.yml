@@ -100,6 +100,17 @@ jobs:
         working-directory: infrastructure/backend/global
         run: terraform init -backend-config=../../${{ env.ENVIRONMENT }}.hcl -reconfigure
 
+      # Migrate state to local before destroying backend
+      - name: Migrate State to Local (Global)
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
+        working-directory: infrastructure/backend/global
+        run: |
+          echo "Migrating Terraform state from S3 to local before destroying backend..."
+          # Remove the remote backend configuration temporarily
+          rm -f remote-state.tf
+          # Reinitialize with local backend, migrating state
+          terraform init -migrate-state -force-copy
+
       # 5b. Initialize Terraform on github runner
       - name: Terraform Init (Environment)
         if: ${{ env.ENVIRONMENT != 'global-infra' }}
