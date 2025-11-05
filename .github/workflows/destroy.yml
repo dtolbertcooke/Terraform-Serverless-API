@@ -1,6 +1,6 @@
 # This workflow destroys the Terraform cloud infrastructure.
 # Steps:
-# 1. Fetch backend config from SSM
+# 1. Fetch backend config from SSM Parameter Store
 # 2. Initialize Terraform with remote backend
 # 3. Destroy resources in the specified environment
 name: Destroy Infrastructure Pipeline
@@ -13,15 +13,6 @@ on:
         description: "Region to destroy resources in (i.e. us-east-1, eu-west-2, etc.)"
         type: string
         required: true
-      environment:
-        description: "Environment to destroy (dev, test, prod)"
-        required: true
-        default: "dev"
-        type: choice
-        options:
-          - dev
-          - test
-          - prod
 
 permissions:
   id-token: write # Required for github oidc authentication with AWS
@@ -31,10 +22,16 @@ jobs:
   destroy:
     name: Destroy Terraform
     runs-on: ubuntu-latest
-    # Maps branch to environment (main=dev, test=test, prod=prod)
-    environment: ${{ github.event.inputs.environment }}
+    # Maps branch to environment (main=dev, test=test, prod=prod, global-infra=global-infra)
+    environment: ${{ github.ref == 'refs/heads/main' && 'dev' ||
+      github.ref == 'refs/heads/test' && 'test' ||
+      github.ref == 'refs/heads/prod' && 'prod' ||
+      github.ref == 'refs/heads/global-infra' && 'global-infra' }}
     env:
-      ENVIRONMENT: ${{ github.event.inputs.environment }}
+      ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'dev' ||
+        github.ref == 'refs/heads/test' && 'test' ||
+        github.ref == 'refs/heads/prod' && 'prod' ||
+        github.ref == 'refs/heads/global-infra' && 'global-infra' }}
 
     defaults:
       run:
@@ -53,26 +50,30 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      # 3. Fetch backend config from SSM
+      # 3. Fetch backend config from SSM Parameter Store
       # - Retrieves global S3/DynamoDB state backend
       # - Creates backend config file for terraform init
       - name: Fetch Backend Config from SSM
         run: |
-          BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/bucket" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
-          TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
-          DBTABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/db_table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
+          STATE_BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-bucket" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
+          STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
+          APP_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/app-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }} 2>/dev/null || echo "") # Handle case where app table doesn't exist (destroy global-infra before main infra)
           REGION=$(aws ssm get-parameter --name "/tf/global-infra/backend/region" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
-          echo "TF_VAR_state_bucket_name=$BUCKET" >> $GITHUB_ENV
 
-          cat > ${{ env.ENVIRONMENT }}.hcl <<EOF
-          bucket         = "$BUCKET"
-          key            = "${{ env.ENVIRONMENT }}/terraform.tfstate"
+          echo "STATE_BUCKET=$STATE_BUCKET" >> $GITHUB_ENV
+          echo "STATE_TABLE=$STATE_TABLE" >> $GITHUB_ENV
+          echo "APP_TABLE=$APP_TABLE" >> $GITHUB_ENV
+          echo "REGION=$REGION" >> $GITHUB_ENV
+
+          echo "TF_VAR_state_bucket_name=$STATE_BUCKET" >> $GITHUB_ENV
+
+          cat > $ENVIRONMENT.hcl <<EOF
+          bucket         = "$STATE_BUCKET"
+          key            = "$ENVIRONMENT/terraform.tfstate"
           region         = "$REGION"
-          dynamodb_table = "$TABLE"
+          dynamodb_table = "$STATE_TABLE"
           encrypt        = true
           EOF
-
-          echo "DBTABLE=$DBTABLE" >> $GITHUB_ENV
 
       # 4. Install Terraform
       - name: Setup Terraform
@@ -80,14 +81,71 @@ jobs:
         with:
           terraform_version: "1.12.2" # Pin to specific version
 
-      # 5. Initialize Terraform locally on github runner
-      - name: Init Terraform
+      # create remote backend for global-infra
+      - name: Create Remote Backend Config (Global)
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
+        working-directory: infrastructure/backend/global
+        run: |
+          touch remote-state.tf
+          cat > remote-state.tf <<EOF
+          terraform {
+            backend "s3" {
+            }
+          }
+          EOF
+
+      # Attach global backend
+      - name: Terraform Init (Global)
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
+        working-directory: infrastructure/backend/global
+        run: terraform init -backend-config=../../${{ env.ENVIRONMENT }}.hcl -reconfigure
+
+      # Migrate state to local before destroying backend
+      - name: Migrate State to Local (Global)
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
+        working-directory: infrastructure/backend/global
+        run: |
+          echo "Migrating Terraform state from S3 to local before destroying backend..."
+          # Remove the remote backend configuration temporarily
+          rm -f remote-state.tf
+          # Reinitialize with local backend, migrating state
+          terraform init -migrate-state -force-copy
+
+      # 5b. Initialize Terraform on github runner
+      - name: Terraform Init (Environment)
+        if: ${{ env.ENVIRONMENT != 'global-infra' }}
         run: terraform init -backend-config=${{ env.ENVIRONMENT }}.hcl
 
-      # 6. Disable deletion protection (if enabled)
-      - name: Disable deletion protection
-        run: aws dynamodb update-table --table-name "$DBTABLE" --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
+      # 6a. Disable deletion protection (if enabled)
+      # - get state table from .tfvars file
+      - name: Disable deletion protection (Global)
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
+        working-directory: infrastructure/backend/global
+        run: aws dynamodb update-table --table-name $STATE_TABLE --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
 
-      # 7. Destroy resources
-      - name: Destroy
-        run: terraform destroy -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve
+      # 6b. Disable deletion protection (if enabled)
+      # - get app table from SSM Parameter Store
+      - name: Disable deletion protection (Environment)
+        if: ${{ env.ENVIRONMENT != 'global-infra' }}
+        run: aws dynamodb update-table --table-name $APP_TABLE --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
+
+      # 7a. Destroy resources
+      - name: Destroy (Global)
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
+        working-directory: infrastructure/backend/global
+        run: terraform destroy -var-file=${{ env.ENVIRONMENT }}.tfvars -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve -lock=false # -lock=false to avoid locking issues on destroy
+
+      # 7b. Destroy resources
+      - name: Destroy (Environment)
+        if: ${{ env.ENVIRONMENT != 'global-infra' }}
+        run: terraform destroy -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve -lock=false # -lock=false to avoid locking issues on destroy
+
+      # 8. Remove backend config from SSM Parameter store (Global)
+      - name: Remove Backend Config from SSM Parameter Store
+        if: ${{ env.ENVIRONMENT == 'global-infra' }}
+        run: |
+          aws ssm delete-parameter --name "/tf/global-infra/backend/state-bucket" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
+          aws ssm delete-parameter --name "/tf/global-infra/backend/state-table" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
+          aws ssm delete-parameter --name "/tf/global-infra/backend/app-table" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
+          aws ssm delete-parameter --name "/tf/global-infra/backend/region" --region ${{ github.event.inputs.region }} || echo "Parameter already deleted"
+          echo "Removed backend parameters from SSM Parameter Store."

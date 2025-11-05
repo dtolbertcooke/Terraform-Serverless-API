@@ -5,6 +5,5 @@ node_modules/
 *.tfstate.*
 tfplan
 fruit-api-*.zip
-# remove after finalizing:
-Architecture.md
-docs/
+docs/ADRs/ADR-template.md
+PROJECT_DELIVERABLES.md

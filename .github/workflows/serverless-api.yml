@@ -104,30 +104,24 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: ${{ vars.AWS_REGION }}
+          aws-region: "us-east-1" # default region just for the OIDC STS call; set actual region in step
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-oidc-role-${{ env.ENVIRONMENT }}
-
-      # Export AWS region and TF_VAR_region for terraform resources
-      - name: Export AWS region
-        run: |
-          echo "AWS_REGION=${{ vars.AWS_REGION }}" >> $GITHUB_ENV
-          echo "TF_VAR_region=${{ vars.AWS_REGION }}" >> $GITHUB_ENV
 
       # Fetch backend config from SSM
       # - Retrieves global S3/DynamoDB state backend
       # - Creates backend config file for terraform init
       - name: Fetch Backend Config
         run: |
-          BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/bucket" --query "Parameter.Value" --output text)
-          TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/table" --query "Parameter.Value" --output text)
+          STATE_BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-bucket" --query "Parameter.Value" --output text)
+          STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-table" --query "Parameter.Value" --output text)
           REGION=$(aws ssm get-parameter --name "/tf/global-infra/backend/region" --query "Parameter.Value" --output text)
-          echo "TF_VAR_state_bucket_name=$BUCKET" >> $GITHUB_ENV
+          echo "TF_VAR_state_bucket_name=$STATE_BUCKET" >> $GITHUB_ENV
 
           cat > ${{ env.ENVIRONMENT }}.hcl <<EOF
-          bucket         = "$BUCKET"
+          bucket         = "$STATE_BUCKET"
           key            = "${{ env.ENVIRONMENT }}/terraform.tfstate"
           region         = "$REGION"
-          dynamodb_table = "$TABLE"
+          dynamodb_table = "$STATE_TABLE"
           encrypt        = true
           EOF
 
@@ -144,7 +138,7 @@ jobs:
       # Plan terraform changes and output to file
       - name: Terraform Plan
         id: plan
-        run: terraform plan -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -out=tfplan
+        run: terraform plan -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -out=tfplan -lock=false
 
       # Comment PR with tfplan output
       - name: Comment PR with Plan
@@ -156,7 +150,7 @@ jobs:
   apply:
     runs-on: ubuntu-latest
     needs: [tests] # only run if tests pass
-    # if: github.event_name == 'push' # only run on pushes uncomment once done testing
+    # if: github.event_name == 'push' # only run on push requests .. uncomment once done testing
 
     # necessary to set environment per branch
     environment: ${{ github.ref == 'refs/heads/main' && 'dev' ||
@@ -189,30 +183,24 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: ${{ vars.AWS_REGION }}
+          aws-region: "us-east-1" # default region just for the OIDC STS call; set actual region in next step
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-oidc-role-${{ env.ENVIRONMENT }}
-
-      # Export AWS region and TF_VAR_region for terraform resources
-      - name: Export AWS Region
-        run: |
-          echo "AWS_REGION=${{ vars.AWS_REGION }}" >> $GITHUB_ENV
-          echo "TF_VAR_region=${{ vars.AWS_REGION }}" >> $GITHUB_ENV
 
       # Fetch backend config from SSM
       # - Retrieves global S3/DynamoDB state backend
       # - Creates backend config file for terraform init
       - name: Fetch Backend Config
         run: |
-          BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/bucket" --query "Parameter.Value" --output text)
-          TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/table" --query "Parameter.Value" --output text)
+          STATE_BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-bucket" --query "Parameter.Value" --output text)
+          STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-table" --query "Parameter.Value" --output text)
           REGION=$(aws ssm get-parameter --name "/tf/global-infra/backend/region" --query "Parameter.Value" --output text)
-          echo "TF_VAR_state_bucket_name=$BUCKET" >> $GITHUB_ENV
+          echo "TF_VAR_state_bucket_name=$STATE_BUCKET" >> $GITHUB_ENV
 
           cat > ${{ env.ENVIRONMENT }}.hcl <<EOF
-          bucket         = "$BUCKET"
+          bucket         = "$STATE_BUCKET"
           key            = "${{ env.ENVIRONMENT }}/terraform.tfstate"
           region         = "$REGION"
-          dynamodb_table = "$TABLE"
+          dynamodb_table = "$STATE_TABLE"
           encrypt        = true
           EOF
 
@@ -228,7 +216,7 @@ jobs:
 
       # Apply terraform changes to build infrastructure using tfvars for environment
       - name: Terraform Apply
-        run: terraform apply -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve
+        run: terraform apply -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve -lock=false
 
       # Export Terraform outputs to JSON file
       - name: Export Outputs
@@ -241,6 +229,6 @@ jobs:
       # Store app db table in SSM Parameter Store
       - name: Store App DB Table in AWS SSM
         run: |
-          DBTABLE=$(jq -r '.db_app_table_name.value' tf_outputs.json)
+          APP_TABLE=$(jq -r '.db_app_table_name.value' tf_outputs.json)
 
-          aws ssm put-parameter --name "/tf/global-infra/backend/db_table"  --value "$DBTABLE"  --type String --overwrite
+          aws ssm put-parameter --name "/tf/global-infra/backend/app-table"  --value "$APP_TABLE"  --type String --overwrite

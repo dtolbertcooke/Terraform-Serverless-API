@@ -39,7 +39,7 @@ module "lambda_code_bucket_prod" {
 # locking table
 module "dynamodb_backend" {
   source              = "../../my-modules/dynamodb"
-  dynamodb_table_name = var.dynamodb_table_name
+  dynamodb_table_name = var.state_table_name
   billing_mode        = "PAY_PER_REQUEST"
   environment         = var.environment
   project_name        = var.project_name
@@ -238,7 +238,8 @@ resource "aws_iam_policy" "github_actions_policy" {
           "logs:PutLogEvents",
           "logs:PutRetentionPolicy",
           "logs:DescribeLogGroups",
-          "logs:ListTagsForResource"
+          "logs:ListTagsForResource",
+          "logs:TagResource"
         ]
         Resource = "*"
       },
@@ -280,10 +281,25 @@ resource "aws_iam_policy" "github_actions_policy" {
         Effect = "Allow"
         Action = ["ssm:GetParameters", "ssm:GetParameter", "ssm:PutParameter", "ssm:DeleteParameter"]
         Resource = [
-          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/bucket",
-          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/region",
-          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/table",
-          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/db_table"
+          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/state-bucket",
+          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/state-table",
+          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/app-table",
+          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/region"
+        ]
+      },
+      {
+        "Sid" : "CloudWatchDashboardAccess",
+        "Effect" : "Allow",
+        "Action" : [
+          "cloudwatch:PutDashboard",
+          "cloudwatch:GetDashboard",
+          "cloudwatch:ListDashboards",
+          "cloudwatch:DeleteDashboards"
+        ],
+        "Resource" : [
+          "arn:aws:cloudwatch::${var.aws_account_id}:dashboard/serverless-api-dev-dashboard",
+          "arn:aws:cloudwatch::${var.aws_account_id}:dashboard/serverless-api-test-dashboard",
+          "arn:aws:cloudwatch::${var.aws_account_id}:dashboard/serverless-api-prod-dashboard"
         ]
       }
     ]

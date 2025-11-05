@@ -1,8 +1,3 @@
-# set api gateway role for logs
-resource "aws_api_gateway_account" "api_gateway_role" {
-  cloudwatch_role_arn = var.api_gateway_role_arn
-}
-
 # create rest api resource
 resource "aws_api_gateway_rest_api" "rest_api" {
   name        = "Fruit-API-${var.environment}"
@@ -124,41 +119,4 @@ resource "aws_api_gateway_deployment" "api_deployment" {
     aws_api_gateway_integration.api_integration_DELETE
   ]
   rest_api_id = aws_api_gateway_rest_api.rest_api.id
-}
-# Stage with access logging
-resource "aws_cloudwatch_log_group" "api_logs" {
-  name              = "/apigw/fruits-api-access-logs-${var.environment}"
-  retention_in_days = 14
-}
-# create api gateway stage
-resource "aws_api_gateway_stage" "api_stage" {
-  stage_name    = var.environment
-  rest_api_id   = aws_api_gateway_rest_api.rest_api.id
-  deployment_id = aws_api_gateway_deployment.api_deployment.id
-
-  access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.api_logs.arn
-    format = jsonencode({
-      requestId    = "$context.requestId",
-      ip           = "$context.identity.sourceIp",
-      requestTime  = "$context.requestTime",
-      httpMethod   = "$context.httpMethod",
-      resourcePath = "$context.resourcePath",
-      status       = "$context.status",
-      protocol     = "$context.protocol"
-    })
-  }
-  depends_on = [aws_api_gateway_account.api_gateway_role]
-}
-# Full Request and Response Logs
-resource "aws_api_gateway_method_settings" "path_specific" {
-  rest_api_id = aws_api_gateway_rest_api.rest_api.id
-  stage_name  = aws_api_gateway_stage.api_stage.stage_name
-  method_path = "*/*"
-
-  settings {
-    logging_level      = "INFO"
-    metrics_enabled    = true
-    data_trace_enabled = true
-  }
 }

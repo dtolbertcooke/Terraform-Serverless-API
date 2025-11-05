@@ -4,7 +4,8 @@ resource "random_id" "random_hex" {
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = "${var.bucket_name}-${var.environment}-${random_id.random_hex.hex}"
+  bucket        = "${var.bucket_name}-${var.environment}-${random_id.random_hex.hex}"
+  force_destroy = true
 
   tags = {
     Environment = var.environment
@@ -24,11 +25,11 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "bucket_encryption
     }
   }
 }
-# versioning
+# versioning - enable for prod and global-infra; suspended for dev/test
 resource "aws_s3_bucket_versioning" "bucket_versioning" {
   bucket = aws_s3_bucket.bucket.id
   versioning_configuration {
-    status = "Enabled"
+    status = (var.environment == "prod" || var.environment == "global-infra") ? "Enabled" : "Suspended"
   }
 }
 # block all public access & disable ACLs
