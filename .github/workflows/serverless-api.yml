@@ -231,4 +231,4 @@ jobs:
         run: |
           APP_TABLE=$(jq -r '.app_db_table_name.value' tf_outputs.json)
 
-          aws ssm put-parameter --name "/tf/global-infra/backend/app-table"  --value "$APP_TABLE"  --type String --overwrite
+          aws ssm put-parameter --name "/tf/global-infra/backend/app-table-${{ env.ENVIRONMENT }}"  --value "$APP_TABLE"  --type String --overwrite
