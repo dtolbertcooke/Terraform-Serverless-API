@@ -1,6 +1,6 @@
-project_name: "fruit-api-project"
+project_name: "fruit-api-project-test"
 owner: "Doug"
-dynamodb_table_name: "fruit-api-table"
+dynamodb_table_name: "fruit-api-table-test"
 app_db_hash_key: "id"
 
 api_methods:
