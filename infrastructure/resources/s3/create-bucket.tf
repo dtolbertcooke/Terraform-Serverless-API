@@ -4,7 +4,7 @@ resource "random_id" "random_hex" {
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = "${var.bucket_name}-${var.environment}-${random_id.random_hex.hex}"
+  bucket        = "${var.bucket_name}-${var.environment}-${random_id.random_hex.hex}"
   force_destroy = true
 
   tags = {
