@@ -50,7 +50,7 @@ module "lambda_functions" {
   project_name         = local.config.project_name
   owner                = local.config.owner
   lambda_exec_role_arn = module.lambda_exec_role.lambda_exec_role_arn
-  bucket_name          = data.terraform_remote_state.global.outputs.lambda_code_bucket_dev_name
+  bucket_name          = var.environment == "prod" ? data.terraform_remote_state.global.outputs.lambda_code_bucket_prod_name : var.environment == "test" ? data.terraform_remote_state.global.outputs.lambda_code_bucket_test_name : data.terraform_remote_state.global.outputs.lambda_code_bucket_dev_name # select bucket based on environment
   dynamodb_table_name  = local.config.dynamodb_table_name
 }
 
