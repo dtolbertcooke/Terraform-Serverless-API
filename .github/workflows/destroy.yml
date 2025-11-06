@@ -57,7 +57,7 @@ jobs:
         run: |
           STATE_BUCKET=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-bucket" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
           STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/state-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
-          APP_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/app-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }} 2>/dev/null || echo "") # Handle case where app table doesn't exist (destroy global-infra before main infra)
+          APP_TABLE=$(aws ssm get-parameter --name "/tf/global-infra/backend/app-table-${{ env.ENVIRONMENT }}" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }} 2>/dev/null || echo "") # Handle case where app table doesn't exist (destroy global-infra before main infra)
           REGION=$(aws ssm get-parameter --name "/tf/global-infra/backend/region" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
 
           echo "STATE_BUCKET=$STATE_BUCKET" >> $GITHUB_ENV
