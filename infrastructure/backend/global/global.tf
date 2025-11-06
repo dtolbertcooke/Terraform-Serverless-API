@@ -283,7 +283,9 @@ resource "aws_iam_policy" "github_actions_policy" {
         Resource = [
           "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/state-bucket",
           "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/state-table",
-          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/app-table",
+          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/app-table-dev",
+          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/app-table-test",
+          "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/app-table-prod",
           "arn:aws:ssm:${var.region}:${var.aws_account_id}:parameter/tf/*/backend/region"
         ]
       },
