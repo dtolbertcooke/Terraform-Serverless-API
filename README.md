@@ -21,7 +21,6 @@ See [`Architecture.md`](./docs/Architecture.md) for diagram and details.
 ## Repository Structure
 
 ```bash
-.
 ├── .github/workflows/                          # GitHub Actions pipelines
 │   ├── bootstrap-global.yml
 │   ├── serverless-api.yml
