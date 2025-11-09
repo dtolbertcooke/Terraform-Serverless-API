@@ -22,15 +22,16 @@ jobs:
   destroy:
     name: Destroy Terraform
     runs-on: ubuntu-latest
-    # Maps branch to environment (main=dev, test=test, prod=prod, global-infra=global-infra)
-    environment: ${{ github.ref == 'refs/heads/main' && 'dev' ||
+    # Maps branch to environment (dev=dev, test=test, main=prod, global-infra=global-infra)
+    # necessary to set environment per branch
+    environment: ${{ github.ref == 'refs/heads/main' && 'prod' ||
       github.ref == 'refs/heads/test' && 'test' ||
-      github.ref == 'refs/heads/prod' && 'prod' ||
+      github.ref == 'refs/heads/dev' && 'dev' ||
       github.ref == 'refs/heads/global-infra' && 'global-infra' }}
     env:
-      ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'dev' ||
+      ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'prod' ||
         github.ref == 'refs/heads/test' && 'test' ||
-        github.ref == 'refs/heads/prod' && 'prod' ||
+        github.ref == 'refs/heads/dev' && 'dev' ||
         github.ref == 'refs/heads/global-infra' && 'global-infra' }}
 
     defaults:

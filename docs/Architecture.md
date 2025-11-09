@@ -2,108 +2,169 @@
 
 ## 1. Overview
 
-This project implements a Serverless REST API with CRUD HTTP operations on AWS using Terraform and is automated using CI/CD.
+This project implements a Serverless REST API on AWS using Terraform for Infrastructure as Code (IaC) and GitHub Actions for CI/CD automation with OIDC authentication. The API supports full CRUD operations and demonstrates a multi-environment, least privilege, production grade cloud architecture.
 
 ## 2. Infrastructure components
 
-### API Gateway – Public entry point exposing REST API endpoints
+### API Gateway – Public Entry Point
 
-- REST API with endpoints for CRUD operations
-- Integrated with Lambda functions
+- Exposes REST API endpoints for Create, Read, Update, and Delete operations
+- Integrated with Lambda functions via AWS Proxy integration
 
-### Lambda – Stateless compute power for handling API requests to DynamoDB from endpoints
+### Lambda – Serverless Compute
 
-- Stateless functions for handling API requests
-- Written in Node.js (Python next)
-- Configured with environment variable for DynamoDB table name
+- Stateless functions handle incoming API requests and interact with DynamoDB
+- Written in Node.js (Python planned for next implentation)
+- Uses environment variables for dynamic configuration (DynamoDB table name)
+- Integrated with CloudWatch for log monitoring and performance insights
 
-### DynamoDB – NoSQL database for state locking and persistent storage of API data
+### DynamoDB – NoSQL database
 
-- NoSQL table with primary key for storing API data
-- Auto-scaling enabled for read/write capacity of app DB
+- Stores persistent application data for the API
+- Separate table for Terraform state locking
+- Configured for on demand billing in dev/test and autoscaling in production
+- Designed for scalability, low latency, and high availability
 
-### S3 - Static Object storage to contain Terraform state file
+### S3 - Object Storage
 
-- Bucket for storing Terraform state file
-- Versioning enabled for production and state file history
+- Stores Terraform remote state files (terraform.tfstate)
+- Versioning enabled to preserve infrastructure history and recovery
+- Also used to store Lambda source code artifacts per environment
 
-### IAM Roles and Policies
+### IAM - Roles, Policies and OIDC
 
-- Least privilege roles for Lambda and API Gateway
-- OIDC role for GitHub Actions with scoped permissions for Terraform
+- Implements least privilege access for Lambda and API Gateway
+- Uses GitHub OIDC provider for CI/CD authentication — eliminating static AWS credentials
+- Defines scoped execution roles for each environment (dev, test, prod)
+- Bootstrap workflow creates global IAM policies and OIDC trust relationships
 
 ### Terraform Backend
 
-- S3 bucket for state file storage
-- DynamoDB table for state locking
+- Remote backend configured with S3 (state storage) and DynamoDB (state locking)
+- SSM Parameter Store holds backend configuration values
+- Ensures team collaboration, drift detection, and reproducible deployments
 
-- **CI/CD** – GitHub Actions with OIDC IAM role for secure deployments using least privilege
+### CI/CD – GitHub Actions
+
+- Automates all provisioning, validation, and deployment steps.
+- Uses OIDC role assumption for secure, temporary AWS access.
+- Structured for environment isolation:
+  - global-infra → bootstraps foundational backend
+  - dev → deploys dev
+  - test → deploys test
+  - main → deploys production
+- Enforces approval review for production and auto apply for lower environments.
 
 ## 3. Requirements
 
 ### Functional
 
-- CRUD (Create, Read, Update, Delete) operations via REST API
-- Secure access to resources using IAM roles and policies
-- Support multiple environments (dev, test, prod)
+- Expose CRUD REST API endpoints through API Gateway
+- Handle requests via Lambda functions integrated with DynamoDB
+- Secure deployments and resource access using scoped IAM roles
+- Support multiple isolated environments (dev, test, prod)
 
 ### Non-functional
 
-- Security: OIDC-based authentication for CI/CD, least privilege IAM
-- Observability: CloudWatch logs and metrics for Lambda/API Gateway
-- Scalability: DynamoDB auto-scaling for demand
-- Cost Efficiency: Pay-per-request model (Lambda, API Gateway, DynamoDB)
-- Reproducibility: Terraform for consistent provisioning
+- **Security**: OIDC authentication for CI/CD; IAM least privilege model
+- **Observability**: CloudWatch logs, metrics, and dashboards
+- **Scalability**: DynamoDB autoscaling and serverless compute elasticity
+- **Cost Efficiency**: Pay-per-request model for Lambda, API Gateway, and DynamoDB
+- **Reproducibility**: Terraform IaC ensures consistent provisioning across environments
 
 ## 4. High-Level Architecture
 
 ![Serverless API Architecture](./Serverless_API_Architecture_Diagram.png)
 
-### API flow:
+### Request Flow:
 
-1. Client sends HTTP request to API Gateway using endpoint
-2. API Gateway forwards request to Lambda
-3. Lambda executes business logic and sends/requests data to/from DynamoDB
-4. CI/CD pipeline uses GitHub Actions with Terraform and AWS via OIDC IAM role
-5. Terraform state is stored in S3 and lock is handled by DynamoDB
+1. Client sends an HTTP request to API Gateway
+2. API Gateway routes the request to the appropriate Lambda function
+3. Lambda executes application logic and interacts with DynamoDB for data operations
+4. GitHub Actions CI/CD pipeline provisions and updates infrastructure via Terraform
+5. Terraform state is stored in S3 with state locking in DynamoDB
 
 ## 5. CI/CD Workflow
 
-- **Trigger**: Push/PR to main/test/prod branch.
+**Trigger**:
 
-- **Steps**:
+- On push or pull request to environment branches (dev, test, main, global-infra).
 
-  1. Lint, format & validate Terraform
-  2. Unit tests for lambda code
-  3. Fetch backend configurations (state bucket, state locking table, region)
-  4. Terraform plan → preview infrastructure changes
-  5. Terraform apply → deploy to AWS
+**Steps**:
 
-- **Security**: GitHub Actions assumes IAM role using OIDC; no long lived credentials
+1. Lint, format, and validate Terraform code
+2. Run Jest unit tests for Lambda functions
+3. Fetch backend configuration from AWS SSM Parameter Store
+4. Execute terraform plan for pre-deployment preview
+5. Execute terraform apply to deploy infrastructure to AWS
 
-## 6. IaC - Terraform
+**Security**:
 
-- Modules:
-  - api_gateway/
-  - lambda/
-  - dynamodb/
-  - iam/
-  - s3/
-- Backend Config:
-  - S3 bucket for state file (terraform.tfstate)
-  - DynamoDB table for locking
+- GitHub Actions authenticates using OIDC — no static AWS keys
+- Each environment assumes its own scoped IAM role for least privilege execution
+
+### Deployment Governance
+
+- **Branch-to-environment mapping:**
+
+  - `global-infra` → bootstrap infrastructure
+  - `dev` → development environment
+  - `test` → staging environment
+  - `main` → production environment
+
+- **Approval workflow:**
+
+  - Deployments to `global-infra` and `main` require manual approval via GitHub environment protection rules
+  - Deployments to `dev` and `test` auto apply on push for faster iteration
+
+- **Purpose:**  
+  This ensures that foundational or production changes cannot be deployed without peer review, maintaining both security and change management discipline in line with DevSecOps best practices.
+
+## 6. Infrastucture as Code - Terraform
+
+**Modules**:
+
+- api_gateway/ - API definitions, resources, and integrations
+- lambda/ – Function configuration, permissions, and deployment packaging
+- dynamodb/ - Tables for both app data and Terraform state locking
+- iam/ - Roles, policies, and OIDC trust setup
+- s3/ - Buckets for Terraform backend and Lambda source code
+
+**Backend Config**:
+
+- S3 → Remote state file storage (terraform.tfstate)
+- DynamoDB → State file locking for concurrency safety
+- SSM Parameter Store → Centralized backend configuration storage
 
 ## 7. Security Considerations
 
-- Use IAM roles with least privilege for all services
-- OIDC-based authentication for CI/CD to avoid long-lived credentials
-- Environment separation using different AWS accounts
-- Enable CloudWatch logging for monitoring and auditing
-- Regularly review and rotate IAM policies and roles
+- All IAM roles adhere to least privilege principles
+- CI/CD uses OIDC to avoid long lived AWS credentials
+- Environment isolation via GitHub environments and separate Terraform state backends
+- CloudWatch logging enabled for API Gateway and Lambda for auditing
+- Regular IAM policy reviews and rotation recommended
 
-## 8. Future Improvements
+## 8. Observability
 
-- Add authentication/authorization (Cognito, JWT)
-- Implement more detailed monitoring/alerting (CloudWatch Alarms, SNS)
-- Integrate with API Gateway custom domain
-- Expand ADRs (observability, cost optimization, authentication)
+- CloudWatch Logs capture Lambda and API Gateway activity
+- CloudWatch Metrics monitor DynamoDB throughput and Lambda performance
+- CloudWatch Dashboards visualize application health and latency
+- Logging retention tuned per environment (7–14 days)
+
+## 9. Cost Optimization
+
+| Service             | Optimization                               | Notes                                                     |
+| ------------------- | ------------------------------------------ | --------------------------------------------------------- |
+| **API Gateway**     | REST API with throttling + stage isolation | More features; could migrate to HTTP API for cost savings |
+| **Lambda**          | Memory tuning + CloudWatch insights        | On demand compute for duration based cost efficiency      |
+| **DynamoDB**        | On demand billing for dev/test             | Autoscaling enabled for prod                              |
+| **CloudWatch Logs** | Retention between 7–14 days                | Prevents unnecessary log storage costs                    |
+
+## 10. Future Improvements
+
+- Add authentication/authorization (Cognito or JWT)
+- Integrate API Gateway with custom domain and ACM certificate
+- Implement detailed alerting via CloudWatch Alarms + SNS
+- Integrate Infracost for real time cost estimation
+- Expand ADR coverage for observability and cost management
+- Extend CI/CD pipeline for Terraform drift detection and reporting
