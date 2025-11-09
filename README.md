@@ -120,9 +120,9 @@ This project uses GitHub Actions with environment level isolation and deployment
 | Environment    | Branch         | AWS Context | Authentication                       | Deployment Type      | Protection level               | Purpose                                     |
 | -------------- | -------------- | ----------- | ------------------------------------ | -------------------- | ------------------------------ | ------------------------------------------- |
 | `global-infra` | `global-infra` | Bootstrap   | Static AWS Admin keys (one time use) | Manuel (on approval) | Protected — reviewers required | Creates global backend (S3, DynamoDB, OIDC) |
-| `dev`          | `main`         | Development | OIDC → IAM Role                      | Automatic (on push)  | Auto deploy                    | Deploys Serverless API (Dev)                |
+| `dev`          | `dev`          | Development | OIDC → IAM Role                      | Automatic (on push)  | Auto deploy                    | Deploys Serverless API (Dev)                |
 | `test`         | `test`         | Staging     | OIDC → IAM Role                      | Automatic (on push)  | Auto deploy                    | Deploys Serverless API (Test)               |
-| `prod`         | `prod`         | Production  | OIDC → IAM Role                      | Manuel (on approval) | Protected — reviewers required | Production release                          |
+| `prod`         | `main`         | Production  | OIDC → IAM Role                      | Manuel (on approval) | Protected — reviewers required | Production release                          |
 
 Each environment has its own **GitHub Environment**, **secrets** and **Terraform remote backend**, ensuring strict separation of state, credentials and deployment permissions.
 

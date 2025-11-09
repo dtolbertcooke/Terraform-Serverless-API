@@ -50,9 +50,9 @@ This project implements a Serverless REST API on AWS using Terraform for Infrast
 - Uses OIDC role assumption for secure, temporary AWS access.
 - Structured for environment isolation:
   - global-infra → bootstraps foundational backend
-  - main → deploys dev
+  - dev → deploys dev
   - test → deploys test
-  - prod → deploys production
+  - main → deploys production
 - Enforces approval review for production and auto apply for lower environments.
 
 ## 3. Requirements
@@ -88,7 +88,7 @@ This project implements a Serverless REST API on AWS using Terraform for Infrast
 
 **Trigger**:
 
-- On push or pull request to environment branches (main, test, prod, global-infra).
+- On push or pull request to environment branches (dev, test, main, global-infra).
 
 **Steps**:
 
@@ -108,13 +108,13 @@ This project implements a Serverless REST API on AWS using Terraform for Infrast
 - **Branch-to-environment mapping:**
 
   - `global-infra` → bootstrap infrastructure
-  - `main` → development environment
+  - `dev` → development environment
   - `test` → staging environment
-  - `prod` → production environment
+  - `main` → production environment
 
 - **Approval workflow:**
 
-  - Deployments to `global-infra` and `prod` require manual approval via GitHub environment protection rules
+  - Deployments to `global-infra` and `main` require manual approval via GitHub environment protection rules
   - Deployments to `dev` and `test` auto apply on push for faster iteration
 
 - **Purpose:**  
