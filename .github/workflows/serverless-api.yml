@@ -81,22 +81,16 @@ jobs:
   plan:
     runs-on: ubuntu-latest
     needs: [tests] # only run if tests pass
-    # if: github.event_name == 'pull_request' # only run on PRs
-    if: github.event_name == 'push' # only run on push requests
-
-    environment: ${{ github.ref == 'refs/heads/main' && 'prod' ||
-      github.ref == 'refs/heads/test' && 'test' ||
-      github.ref == 'refs/heads/dev' && 'dev' }}
-    env:
-      ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'prod' ||
-        github.ref == 'refs/heads/test' && 'test' ||
-        github.ref == 'refs/heads/dev' && 'dev' }}
+    if: github.event_name == 'pull_request' # only run on PRs
 
     # necessary to set environment per branch
-    # env:
-    #   ENVIRONMENT: ${{ github.base_ref == 'main' && 'prod' ||
-    #     github.base_ref == 'test' && 'test' ||
-    #     github.base_ref == 'dev' && 'dev' }}
+    environment: ${{ github.base_ref == 'refs/heads/main' && 'prod' ||
+      github.base_ref == 'refs/heads/test' && 'test' ||
+      github.base_ref == 'refs/heads/dev' && 'dev' }}
+    env:
+      ENVIRONMENT: ${{ github.base_ref == 'main' && 'prod' ||
+        github.base_ref == 'test' && 'test' ||
+        github.base_ref == 'dev' && 'dev' }}
     defaults:
       run:
         working-directory: infrastructure # Keep runs scoped to environment code
@@ -156,8 +150,7 @@ jobs:
   apply:
     runs-on: ubuntu-latest
     needs: [tests] # only run if tests pass
-    if: github.event_name == 'pull_request' # only run on PRs
-    # if: github.event_name == 'push' # only run on push requests
+    if: github.event_name == 'push' # only run on push requests
 
     # necessary to set environment per branch
     environment: ${{ github.ref == 'refs/heads/main' && 'prod' ||
