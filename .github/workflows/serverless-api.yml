@@ -81,7 +81,7 @@ jobs:
   plan:
     runs-on: ubuntu-latest
     needs: [tests] # only run if tests pass
-    if: github.event_name == 'pull_request' # only run on PRs
+    # if: github.event_name == 'pull_request' # only run on PRs
 
     # necessary to set environment per branch
     env:
@@ -147,7 +147,8 @@ jobs:
   apply:
     runs-on: ubuntu-latest
     needs: [tests] # only run if tests pass
-    if: github.event_name == 'push' # only run on push requests
+    # if: github.event_name == 'push' # only run on push requests
+      if: github.event_name == 'pull_request' # testing only
 
     # necessary to set environment per branch
     environment: ${{ github.ref == 'refs/heads/main' && 'prod' ||
