@@ -58,7 +58,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.12.2" # Pin to specific version
+          terraform_version: "1.12.2" # Pin to specific version of terraform
 
       - name: Terraform fmt check
         working-directory: infrastructure
