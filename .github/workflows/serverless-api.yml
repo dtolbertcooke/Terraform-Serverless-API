@@ -67,6 +67,11 @@ jobs:
     needs: [tests] # only run if tests pass
     if: github.event_name == 'pull_request' # only run on PRs
 
+    env:
+      ENVIRONMENT: ${{ github.base_ref == 'main' && 'prod' ||
+        github.base_ref == 'test' && 'test' ||
+        github.base_ref == 'dev' && 'dev' }}
+
     defaults:
       run:
         working-directory: infrastructure # Keep runs scoped to environment code
