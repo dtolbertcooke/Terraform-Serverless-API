@@ -129,7 +129,7 @@ jobs:
       - name: Comment PR with Plan
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          path: tfplan.txt
+          path: infrastructure/tfplan.txt
 
   # Third job: Terraform Apply (on pushes to dev/test/main)
   apply:
