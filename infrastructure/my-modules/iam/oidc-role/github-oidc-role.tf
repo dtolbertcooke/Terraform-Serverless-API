@@ -14,8 +14,12 @@ resource "aws_iam_role" "github_actions" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Condition = {
           StringLike = {
-            # restrict to repository + environment
-            "token.actions.githubusercontent.com:sub" = "repo:${var.repository}:environment:${var.environment}"
+            # restrict to repository + environment 
+            "token.actions.githubusercontent.com:sub" = [
+              "repo:${var.repository}:environment:${var.environment}",
+              "repo:${var.repository}:ref:refs/heads/${var.environment}",
+              "repo:${var.repository}:pull_request"
+              ]
           }
         }
       }
