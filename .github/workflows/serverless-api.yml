@@ -19,27 +19,6 @@ jobs:
     name: Tests & Lint
     runs-on: ubuntu-latest
 
-    # necessary to set environment per branch
-    # Maps branch to environment (dev=dev, test=test, main=prod, global-infra=global-infra)
-    environment: ${{ github.event_name == 'pull_request' &&
-      (github.base_ref == 'main' && 'prod' ||
-      github.base_ref == 'test' && 'test' ||
-      github.base_ref == 'dev'  && 'dev') ||
-      github.event_name == 'push' &&
-      (github.ref == 'refs/heads/main' && 'prod' ||
-      github.ref == 'refs/heads/test' && 'test' ||
-      github.ref == 'refs/heads/dev'  && 'dev') }}
-
-    env:
-      ENVIRONMENT: ${{ github.event_name == 'pull_request' &&
-        (github.base_ref == 'main' && 'prod' ||
-        github.base_ref == 'test' && 'test' ||
-        github.base_ref == 'dev'  && 'dev') ||
-        github.event_name == 'push' &&
-        (github.ref == 'refs/heads/main' && 'prod' ||
-        github.ref == 'refs/heads/test' && 'test' ||
-        github.ref == 'refs/heads/dev'  && 'dev') }}
-
     steps:
       # Checkout the repo
       - name: Checkout
