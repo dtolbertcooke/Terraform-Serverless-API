@@ -16,10 +16,10 @@ resource "aws_iam_role" "github_actions" {
           StringLike = {
             # restrict to repository + environment 
             "token.actions.githubusercontent.com:sub" = [
-              "repo:${var.repository}:environment:${var.environment}", # allow environment specific workflows to access role
+              "repo:${var.repository}:environment:${var.environment}",    # allow environment specific workflows to access role
               "repo:${var.repository}:ref:refs/heads/${var.environment}", # allow branch pushes to access role
-              "repo:${var.repository}:pull_request" # allow PRs to access role
-              ]
+              "repo:${var.repository}:pull_request"                       # allow PRs to access role
+            ]
           }
         }
       }
