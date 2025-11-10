@@ -3,15 +3,9 @@ description: Builds serverless API infrastructure in the specified environment.
 
 on:
   pull_request:
-    branches:
-      - dev
-      - test
-      - main
+    branches: [dev, test, main]
   push:
-    branches:
-      - dev
-      - test
-      - main
+    branches: [dev, test, main]
   workflow_dispatch: # Manual trigger included to allow manual runs if needed
 
 permissions:
@@ -24,16 +18,6 @@ jobs:
   tests:
     name: Tests & Lint
     runs-on: ubuntu-latest
-
-    # necessary to set environment per branch
-    # Maps branch to environment (dev=dev, test=test, main=prod, global-infra=global-infra)
-    environment: ${{ github.ref == 'refs/heads/main' && 'prod' ||
-      github.ref == 'refs/heads/test' && 'test' ||
-      github.ref == 'refs/heads/dev' && 'dev' }}
-    env:
-      ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'prod' ||
-        github.ref == 'refs/heads/test' && 'test' ||
-        github.ref == 'refs/heads/dev' && 'dev' }}
 
     steps:
       # Checkout the repo
@@ -63,7 +47,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.12.2" # Pin to specific version
+          terraform_version: "1.12.2" # Pin to specific version of terraform
 
       - name: Terraform fmt check
         working-directory: infrastructure
@@ -83,14 +67,11 @@ jobs:
     needs: [tests] # only run if tests pass
     if: github.event_name == 'pull_request' # only run on PRs
 
-    # necessary to set environment per branch
-    environment: ${{ github.ref == 'refs/heads/main' && 'prod' ||
-      github.ref == 'refs/heads/test' && 'test' ||
-      github.ref == 'refs/heads/dev' && 'dev' }}
     env:
-      ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'prod' ||
-        github.ref == 'refs/heads/test' && 'test' ||
-        github.ref == 'refs/heads/dev' && 'dev' }}
+      ENVIRONMENT: ${{ github.base_ref == 'main' && 'prod' ||
+        github.base_ref == 'test' && 'test' ||
+        github.base_ref == 'dev' && 'dev' }}
+
     defaults:
       run:
         working-directory: infrastructure # Keep runs scoped to environment code
@@ -104,7 +85,7 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: "us-east-1" # default region just for the OIDC STS call; set actual region in step
+          aws-region: "us-east-1" # default region just for the OIDC STS call; set actual region in step below
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-oidc-role-${{ env.ENVIRONMENT }}
 
       # Fetch backend config from SSM
@@ -140,13 +121,17 @@ jobs:
         id: plan
         run: terraform plan -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -out=tfplan -lock=false
 
+      # Convert plan to text for PR comment
+      - name: Convert plan to text
+        run: terraform show -no-color tfplan > tfplan.txt
+
       # Comment PR with tfplan output
       - name: Comment PR with Plan
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          path: tfplan
+          path: infrastructure/tfplan.txt
 
-  # Third job: Terraform Apply (on pushes to main/test/prod)
+  # Third job: Terraform Apply (on pushes to dev/test/main)
   apply:
     runs-on: ubuntu-latest
     needs: [tests] # only run if tests pass
@@ -208,7 +193,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.12.2" # Pin to specific version
+          terraform_version: "1.12.2" # Pin to specific version of terraform
 
       # Initialize Terraform locally on github runner
       - name: Terraform Init
@@ -226,8 +211,8 @@ jobs:
       - name: Install jq
         run: sudo apt-get install -y jq
 
-      # Store app db table in SSM Parameter Store
-      - name: Store App DB Table in AWS SSM
+      # Store API DB table in SSM Parameter Store
+      - name: Store API DB Table in AWS SSM
         run: |
           APP_TABLE=$(jq -r '.app_db_table_name.value' tf_outputs.json)
 
