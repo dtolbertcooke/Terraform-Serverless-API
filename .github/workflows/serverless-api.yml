@@ -21,14 +21,24 @@ jobs:
 
     # necessary to set environment per branch
     # Maps branch to environment (dev=dev, test=test, main=prod, global-infra=global-infra)
-    environment: ${{ github.event_name == 'push' && (
-      github.ref == 'refs/heads/main' && 'prod' ||
+    environment: ${{ github.event_name == 'pull_request' &&
+      (github.base_ref == 'main' && 'prod' ||
+      github.base_ref == 'test' && 'test' ||
+      github.base_ref == 'dev'  && 'dev') ||
+      github.event_name == 'push' &&
+      (github.ref == 'refs/heads/main' && 'prod' ||
       github.ref == 'refs/heads/test' && 'test' ||
-      github.ref == 'refs/heads/dev'  && 'dev')}}
+      github.ref == 'refs/heads/dev'  && 'dev') }}
+
     env:
-      ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'prod' ||
+      ENVIRONMENT: ${{ github.event_name == 'pull_request' &&
+        (github.base_ref == 'main' && 'prod' ||
+        github.base_ref == 'test' && 'test' ||
+        github.base_ref == 'dev'  && 'dev') ||
+        github.event_name == 'push' &&
+        (github.ref == 'refs/heads/main' && 'prod' ||
         github.ref == 'refs/heads/test' && 'test' ||
-        github.ref == 'refs/heads/dev' && 'dev' }}
+        github.ref == 'refs/heads/dev'  && 'dev') }}
 
     steps:
       # Checkout the repo
@@ -77,11 +87,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: [tests] # only run if tests pass
     if: github.event_name == 'pull_request' # only run on PRs
-
-    env:
-      ENVIRONMENT: ${{ github.base_ref == 'main' && 'prod' ||
-        github.base_ref == 'test' && 'test' ||
-        github.base_ref == 'dev' && 'dev' }}
 
     defaults:
       run:
