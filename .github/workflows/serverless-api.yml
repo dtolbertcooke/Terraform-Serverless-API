@@ -121,11 +121,15 @@ jobs:
         id: plan
         run: terraform plan -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -out=tfplan -lock=false
 
+      # Convert plan to text for PR comment
+      - name: Convert plan to text
+        run: terraform show -no-color tfplan > tfplan.txt
+
       # Comment PR with tfplan output
       - name: Comment PR with Plan
         uses: marocchino/sticky-pull-request-comment@v2
         with:
-          path: tfplan
+          path: tfplan.txt
 
   # Third job: Terraform Apply (on pushes to dev/test/main)
   apply:
