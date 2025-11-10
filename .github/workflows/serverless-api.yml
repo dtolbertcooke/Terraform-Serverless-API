@@ -200,7 +200,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: "1.12.2" # Pin to specific version
+          terraform_version: "1.12.2" # Pin to specific version of terraform
 
       # Initialize Terraform locally on github runner
       - name: Terraform Init
