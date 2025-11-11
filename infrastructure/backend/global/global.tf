@@ -53,6 +53,48 @@ module "github_oidc_provider" {
   source = "../../my-modules/iam/oidc-provider"
 }
 
+# dev role
+module "github_oidc_role_dev" {
+  source            = "../../my-modules/iam/oidc-role"
+  environment       = "dev"
+  oidc_provider_arn = module.github_oidc_provider.oidc_provider_arn
+  repository        = var.repository
+}
+
+# test role
+module "github_oidc_role_test" {
+  source            = "../../my-modules/iam/oidc-role"
+  environment       = "test"
+  oidc_provider_arn = module.github_oidc_provider.oidc_provider_arn
+  repository        = var.repository
+}
+
+# prod role
+module "github_oidc_role_prod" {
+  source            = "../../my-modules/iam/oidc-role"
+  environment       = "prod"
+  oidc_provider_arn = module.github_oidc_provider.oidc_provider_arn
+  repository        = var.repository
+}
+
+# Attach general policy to dev role
+resource "aws_iam_role_policy_attachment" "github_actions_attach_dev" {
+  role       = module.github_oidc_role_dev.name
+  policy_arn = aws_iam_policy.github_actions_policy.arn
+}
+
+# Attach general policy to test role
+resource "aws_iam_role_policy_attachment" "github_actions_attach_test" {
+  role       = module.github_oidc_role_test.name
+  policy_arn = aws_iam_policy.github_actions_policy.arn
+}
+
+# Attach general policy to prod role
+resource "aws_iam_role_policy_attachment" "github_actions_attach_prod" {
+  role       = module.github_oidc_role_prod.name
+  policy_arn = aws_iam_policy.github_actions_policy.arn
+}
+
 # OIDC policy to be used by all (dev, test, prod) github oidc roles
 resource "aws_iam_policy" "github_actions_policy" {
   name = "github-oidc-role-main-terraform-policy"
@@ -306,46 +348,4 @@ resource "aws_iam_policy" "github_actions_policy" {
       }
     ]
   })
-}
-
-# dev role
-module "github_oidc_role_dev" {
-  source            = "../../my-modules/iam/oidc-role"
-  environment       = "dev"
-  oidc_provider_arn = module.github_oidc_provider.oidc_provider_arn
-  repository        = var.repository
-}
-
-# test role
-module "github_oidc_role_test" {
-  source            = "../../my-modules/iam/oidc-role"
-  environment       = "test"
-  oidc_provider_arn = module.github_oidc_provider.oidc_provider_arn
-  repository        = var.repository
-}
-
-# prod role
-module "github_oidc_role_prod" {
-  source            = "../../my-modules/iam/oidc-role"
-  environment       = "prod"
-  oidc_provider_arn = module.github_oidc_provider.oidc_provider_arn
-  repository        = var.repository
-}
-
-# Attach general policy to dev role
-resource "aws_iam_role_policy_attachment" "github_actions_attach_dev" {
-  role       = module.github_oidc_role_dev.name
-  policy_arn = aws_iam_policy.github_actions_policy.arn
-}
-
-# Attach general policy to test role
-resource "aws_iam_role_policy_attachment" "github_actions_attach_test" {
-  role       = module.github_oidc_role_test.name
-  policy_arn = aws_iam_policy.github_actions_policy.arn
-}
-
-# Attach general policy to prod role
-resource "aws_iam_role_policy_attachment" "github_actions_attach_prod" {
-  role       = module.github_oidc_role_prod.name
-  policy_arn = aws_iam_policy.github_actions_policy.arn
 }
