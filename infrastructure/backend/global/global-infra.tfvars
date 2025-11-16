@@ -1,5 +1,0 @@
-state_bucket_name   = "fruit-api-state-bucket"
-state_table_name    = "fruit-api-lock-table"
-lambda_code_bucket  = "fruit-api-lambda-code-bucket"
-backend_db_hash_key = "LockID"
-repository          = "dtolbertcooke/Terraform-Serverless-API"

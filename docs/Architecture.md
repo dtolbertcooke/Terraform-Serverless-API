@@ -120,7 +120,7 @@ This project implements a Serverless REST API on AWS using Terraform for Infrast
 - **Purpose:**  
   This ensures that foundational or production changes cannot be deployed without peer review, maintaining both security and change management discipline in line with DevSecOps best practices.
 
-## 6. Infrastucture as Code - Terraform
+## 6. Infrastructure as Code - Terraform
 
 **Modules**:
 
