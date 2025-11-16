@@ -89,7 +89,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: "us-east-1" # default region just for the OIDC STS call; set actual region in step below
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-oidc-role-${{ env.ENVIRONMENT }}
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/github-oidc-role-${{ env.ENVIRONMENT }}
 
       # Fetch backend config from SSM
       # - Retrieves global S3/DynamoDB state backend
@@ -122,7 +122,7 @@ jobs:
       # Plan terraform changes and output to file
       - name: Terraform Plan
         id: plan
-        run: terraform plan -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -out=tfplan -lock=false
+        run: terraform plan -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ vars.AWS_ACCOUNT_ID }}" -out=tfplan -lock=false
 
       # Convert plan to text for PR comment
       - name: Convert plan to text
@@ -173,7 +173,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: "us-east-1" # default region just for the OIDC STS call; set actual region in next step
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-oidc-role-${{ env.ENVIRONMENT }}
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/github-oidc-role-${{ env.ENVIRONMENT }}
 
       # Fetch backend config from SSM
       # - Retrieves global S3/DynamoDB state backend
@@ -205,7 +205,7 @@ jobs:
 
       # Apply terraform changes to build infrastructure using tfvars for environment
       - name: Terraform Apply
-        run: terraform apply -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" -auto-approve -lock=false
+        run: terraform apply -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ vars.AWS_ACCOUNT_ID }}" -auto-approve -lock=false
 
       # Export Terraform outputs to JSON file
       - name: Export Outputs
