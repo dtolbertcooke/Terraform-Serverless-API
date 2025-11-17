@@ -230,7 +230,7 @@ jobs:
           -var="lambda_code_bucket_dev=${{ env.DEV_LAMBDA_BUCKET }}" \
           -var="lambda_code_bucket_test=${{ env.TEST_LAMBDA_BUCKET }}" \
           -var="lambda_code_bucket_prod=${{ env.PROD_LAMBDA_BUCKET }}" \
-          -out=tfplan -lock=false
+          -lock=false
 
       # Export Terraform outputs to JSON file
       - name: Export Outputs
