@@ -58,6 +58,9 @@ jobs:
           STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-backend/state-table" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
           APP_TABLE=$(aws ssm get-parameter --name "/tf/global-backend/app-table-${{ env.ENVIRONMENT }}" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }} 2>/dev/null || echo "") # Handle case where app table doesn't exist (destroy global-infra before main infra)
           REGION=$(aws ssm get-parameter --name "/tf/global-backend/region" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
+          DEV_LAMBDA_BUCKET=$(aws ssm get-parameter --name "/tf/global-backend/lambda-code-bucket-dev" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
+          TEST_LAMBDA_BUCKET=$(aws ssm get-parameter --name "/tf/global-backend/lambda-code-bucket-test" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
+          PROD_LAMBDA_BUCKET=$(aws ssm get-parameter --name "/tf/global-backend/lambda-code-bucket-prod" --query "Parameter.Value" --output text --region ${{ github.event.inputs.region }})
 
           echo "STATE_BUCKET=$STATE_BUCKET" >> $GITHUB_ENV
           echo "STATE_TABLE=$STATE_TABLE" >> $GITHUB_ENV
@@ -65,6 +68,9 @@ jobs:
           echo "REGION=$REGION" >> $GITHUB_ENV
 
           echo "TF_VAR_state_bucket_name=$STATE_BUCKET" >> $GITHUB_ENV
+          echo "DEV_LAMBDA_BUCKET=$DEV_LAMBDA_BUCKET" >> $GITHUB_ENV
+          echo "TEST_LAMBDA_BUCKET=$TEST_LAMBDA_BUCKET" >> $GITHUB_ENV
+          echo "PROD_LAMBDA_BUCKET=$PROD_LAMBDA_BUCKET" >> $GITHUB_ENV
 
           cat > $ENVIRONMENT.hcl <<EOF
           bucket         = "$STATE_BUCKET"
@@ -84,10 +90,10 @@ jobs:
       - name: Terraform Init (Environment)
         run: terraform init -backend-config=${{ env.ENVIRONMENT }}.hcl
 
-      # # 6. Disable deletion protection (if enabled)
-      # # - get app table from SSM Parameter Store
-      # - name: Disable deletion protection (Environment)
-      #   run: aws dynamodb update-table --table-name $APP_TABLE --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
+      # 6. Disable deletion protection (if enabled)
+      # - get app table from SSM Parameter Store
+      - name: Disable deletion protection (Environment)
+        run: aws dynamodb update-table --table-name $APP_TABLE --no-deletion-protection-enabled --region ${{ github.event.inputs.region }}
 
       # 7b. Destroy resources
       - name: Destroy (Environment)
