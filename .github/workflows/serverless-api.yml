@@ -129,7 +129,8 @@ jobs:
       # Plan terraform changes and output to file
       - name: Terraform Plan
         id: plan
-        run: terraform plan \
+        run: |
+          terraform plan \
           -var="environment=${{ env.ENVIRONMENT }}" \
           -var="aws_account_id=${{ vars.AWS_ACCOUNT_ID }}" \
           -var="lambda_code_bucket_dev=${{ env.DEV_LAMBDA_BUCKET }}" \
