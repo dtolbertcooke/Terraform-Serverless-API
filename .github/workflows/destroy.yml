@@ -97,4 +97,11 @@ jobs:
 
       # 7b. Destroy resources
       - name: Destroy (Environment)
-        run: terraform destroy -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ vars.AWS_ACCOUNT_ID }}" -auto-approve -lock=false # -lock=false to avoid locking issues on destroy
+        run: |
+          terraform destroy \
+          -var="environment=${{ env.ENVIRONMENT }}" \
+          -var="aws_account_id=${{ vars.AWS_ACCOUNT_ID }}" \
+          -var="lambda_code_bucket_dev=${{ env.DEV_LAMBDA_BUCKET }}" \
+          -var="lambda_code_bucket_test=${{ env.TEST_LAMBDA_BUCKET }}" \
+          -var="lambda_code_bucket_prod=${{ env.PROD_LAMBDA_BUCKET }}" \
+          -auto-approve
