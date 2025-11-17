@@ -2,16 +2,6 @@ locals {
   config = yamldecode(file("${path.module}/env/${var.environment}.yml"))
 }
 
-# remote state for global backend to get lambda code bucket names
-data "terraform_remote_state" "global" {
-  backend = "s3"
-  config = {
-    bucket = var.state_bucket_name
-    key    = "${var.environment}/terraform.tfstate"
-    region = var.region
-  }
-}
-
 # app resources (lambda execution role, api-gateway role, lambda functions, dynamodb table, rest api)
 # 1. dynamodb table for app
 module "app_db" {
@@ -50,7 +40,7 @@ module "lambda_functions" {
   project_name         = local.config.project_name
   owner                = local.config.owner
   lambda_exec_role_arn = module.lambda_exec_role.lambda_exec_role_arn
-  bucket_name          = var.environment == "prod" ? data.terraform_remote_state.global.outputs.lambda_code_bucket_prod_name : var.environment == "test" ? data.terraform_remote_state.global.outputs.lambda_code_bucket_test_name : data.terraform_remote_state.global.outputs.lambda_code_bucket_dev_name # select bucket based on environment
+  bucket_name = var.environment == "prod" ? var.lambda_code_bucket_prod : var.environment == "test" ? var.lambda_code_bucket_test : var.lambda_code_bucket_dev # select bucket based on environment
   dynamodb_table_name  = local.config.dynamodb_table_name
 }
 

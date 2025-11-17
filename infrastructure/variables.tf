@@ -16,3 +16,15 @@ variable "state_bucket_name" {
   description = "Name of the S3 bucket for Terraform state"
   type        = string
 }
+variable "lambda_code_bucket_dev" {
+  description = "Name of the dev env S3 bucket for Lambda code"
+  type        = string
+}
+variable "lambda_code_bucket_test" {
+  description = "Name of the test env S3 bucket for Lambda code"
+  type        = string
+}
+variable "lambda_code_bucket_prod" {
+  description = "Name of the prod env S3 bucket for Lambda code"
+  type        = string
+}
