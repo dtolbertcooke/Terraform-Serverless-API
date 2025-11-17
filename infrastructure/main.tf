@@ -8,7 +8,7 @@ data "terraform_remote_state" "global" {
   config = {
     bucket = var.state_bucket_name
     key    = "${var.environment}/terraform.tfstate"
-gion = var.region
+    gion   = var.region
   }
 }
 
