@@ -81,7 +81,7 @@ See [`Architecture.md`](./docs/Architecture.md) for diagram and details.
   - SSM (Parameter storage)
 - **Bootstrap Role / Admin User** with **least privilege** for the above resources
 - **GitHub Environment Secrets** per environment:
-  - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` (only for bootstrap)
+  - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` (only for destroy)
 - **GitHub Repository Secrets**:
   - `AWS_ACCOUNT_ID` (used in all workflows)
 - **Terraform v1.12.2+**
