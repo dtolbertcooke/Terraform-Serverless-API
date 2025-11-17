@@ -4,17 +4,20 @@ This project demonstrates how to build and deploy a **Serverless REST API** on A
 
 ## Architecture Overview
 
-**High-Level Flow:**
+**Request Path**
 
-1. **Terraform** → Declaratively defines infrastructure (IaC)
-2. **S3 + DynamoDB** → Remote Terraform state locking
-3. **GitHub Actions** → CI/CD automation using OIDC (no static AWS keys)
-4. **API Gateway** → Public HTTP endpoints
-5. **Lambda (Node.js)** → Serverless application logic
-6. **DynamoDB** → NoSQL database to persist API data
-7. **CloudWatch** → Centralized logging & metrics
-8. **Systems Manager (SSM)** → Parameter Store for configuration management
-9. **S3** → Lambda source code storage
+1. **API Gateway** → Public HTTP endpoints
+2. **Lambda (Node.js)** → Executes CRUD logic
+3. **DynamoDB** → Store API data
+4. **CloudWatch** → Centralized logging, metrics, and dashboards
+5. **Systems Manager (SSM)** → Parameter Store for configuration management
+
+**Infrastructure Path (CI/CD)**
+
+1. **GitHub Actions** → CI/CD automation using OIDC
+2. **Terraform** → Terraform deploys environment specific infrastructure
+3. **S3** → Lambda source code storage
+4. **S3 + DynamoDB** → Remote Terraform state locking
 
 See [`Architecture.md`](./docs/Architecture.md) for diagram and details.
 
@@ -22,7 +25,6 @@ See [`Architecture.md`](./docs/Architecture.md) for diagram and details.
 
 ```bash
 ├── .github/workflows/                          # GitHub Actions pipelines
-│   ├── bootstrap-global.yml
 │   ├── serverless-api.yml
 │   ├── destroy.yml
 ├── app/
@@ -48,11 +50,6 @@ See [`Architecture.md`](./docs/Architecture.md) for diagram and details.
 │   ├── provider.tf
 │   ├── remote-state.tf
 │   ├── variables.tf
-│   └── backend/global/                         # global configuration for each environment
-│       ├── global-infra.tfvars
-│       ├── global.tf
-│       ├── outputs.tf
-│       └── variables.tf
 │   ├── env/                                    # configuration for each environment
 │       ├── dev.yml
 │       ├── test.yml
@@ -73,7 +70,6 @@ See [`Architecture.md`](./docs/Architecture.md) for diagram and details.
 │       ├── outputs.tf
 │       ├── variables.tf
 └── README.md
-
 ```
 
 ## Prerequisites
@@ -93,7 +89,7 @@ See [`Architecture.md`](./docs/Architecture.md) for diagram and details.
 ## Setup
 
 **Step 1: Bootstrap Remote Backend**
-Run the **bootstrap-global.yml** workflow once (from the global-infra branch).
+I have a separate workflow that is only ran once (from the Terraform-GLOBAL repo).
 
 **This creates:**
 
@@ -118,20 +114,18 @@ Run the serverless-api.yml workflow for target environment (branch).
 
 This project uses GitHub Actions with environment level isolation and deployment protection for each stage.
 
-| Environment    | Branch         | AWS Context | Authentication                       | Deployment Type      | Protection level               | Purpose                                     |
-| -------------- | -------------- | ----------- | ------------------------------------ | -------------------- | ------------------------------ | ------------------------------------------- |
-| `global-infra` | `global-infra` | Bootstrap   | Static AWS Admin keys (one time use) | Manuel (on approval) | Protected — reviewers required | Creates global backend (S3, DynamoDB, OIDC) |
-| `dev`          | `dev`          | Development | OIDC → IAM Role                      | Automatic (on push)  | Auto deploy                    | Deploys Serverless API (Dev)                |
-| `test`         | `test`         | Staging     | OIDC → IAM Role                      | Automatic (on push)  | Auto deploy                    | Deploys Serverless API (Test)               |
-| `prod`         | `main`         | Production  | OIDC → IAM Role                      | Manuel (on approval) | Protected — reviewers required | Production release                          |
+| Environment | Branch | AWS Context | Authentication  | Deployment Type      | Protection level               | Purpose                       |
+| ----------- | ------ | ----------- | --------------- | -------------------- | ------------------------------ | ----------------------------- |
+| `dev`       | `dev`  | Development | OIDC → IAM Role | Automatic (on push)  | Auto deploy                    | Deploys Serverless API (Dev)  |
+| `test`      | `test` | Staging     | OIDC → IAM Role | Automatic (on push)  | Auto deploy                    | Deploys Serverless API (Test) |
+| `prod`      | `main` | Production  | OIDC → IAM Role | Manuel (on approval) | Protected — reviewers required | Production release            |
 
 Each environment has its own **GitHub Environment**, **secrets** and **Terraform remote backend**, ensuring strict separation of state, credentials and deployment permissions.
 
 ## CI/CD Workflow Summary
 
-1. Bootstrap (one time) → bootstrap-global.yml
-2. Deploy per environment → serverless-api.yml
-3. Destroy global/environment → destroy.yml
+1. Deploy per environment → serverless-api.yml
+2. Destroy global/environment → destroy.yml
 
 - On Push:
 
@@ -190,7 +184,7 @@ Each environment has its own **GitHub Environment**, **secrets** and **Terraform
 
 ## Future Improvements
 
-- Expand ADRs (cost optimization)
+- Expand ADRs
 - Integrate Infracost for cost estimation
 - Add custom domain + HTTPS (ACM + API Gateway)
 - Implement Python Lambda functions
