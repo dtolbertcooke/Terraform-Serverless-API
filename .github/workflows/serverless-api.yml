@@ -224,7 +224,8 @@ jobs:
 
       # Apply terraform changes to build infrastructure using tfvars for environment
       - name: Terraform Apply
-        run: terraform apply \
+        run: |
+          terraform apply \
           -var="environment=${{ env.ENVIRONMENT }}" \
           -var="aws_account_id=${{ vars.AWS_ACCOUNT_ID }}" \
           -var="lambda_code_bucket_dev=${{ env.DEV_LAMBDA_BUCKET }}" \
