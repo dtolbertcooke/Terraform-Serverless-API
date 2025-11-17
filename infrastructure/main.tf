@@ -40,7 +40,7 @@ module "lambda_functions" {
   project_name         = local.config.project_name
   owner                = local.config.owner
   lambda_exec_role_arn = module.lambda_exec_role.lambda_exec_role_arn
-  bucket_name = var.environment == "prod" ? var.lambda_code_bucket_prod : var.environment == "test" ? var.lambda_code_bucket_test : var.lambda_code_bucket_dev # select bucket based on environment
+  bucket_name          = var.environment == "prod" ? var.lambda_code_bucket_prod : var.environment == "test" ? var.lambda_code_bucket_test : var.lambda_code_bucket_dev # select bucket based on environment
   dynamodb_table_name  = local.config.dynamodb_table_name
 }
 
