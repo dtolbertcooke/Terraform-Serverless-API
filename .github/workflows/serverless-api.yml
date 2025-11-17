@@ -196,7 +196,13 @@ jobs:
           STATE_BUCKET=$(aws ssm get-parameter --name "/tf/global-backend/state-bucket" --query "Parameter.Value" --output text)
           STATE_TABLE=$(aws ssm get-parameter --name "/tf/global-backend/state-table" --query "Parameter.Value" --output text)
           REGION=$(aws ssm get-parameter --name "/tf/global-backend/region" --query "Parameter.Value" --output text)
-          echo "TF_VAR_state_bucket_name=$STATE_BUCKET" >> $GITHUB_ENV
+          DEV_LAMBDA_BUCKET=$(aws ssm get-parameter --name "/tf/global-backend/lambda-code-bucket-dev" --query "Parameter.Value" --output text)
+          TEST_LAMBDA_BUCKET=$(aws ssm get-parameter --name "/tf/global-backend/lambda-code-bucket-test" --query "Parameter.Value" --output text)
+          PROD_LAMBDA_BUCKET=$(aws ssm get-parameter --name "/tf/global-backend/lambda-code-bucket-prod" --query "Parameter.Value" --output text)
+
+          echo "DEV_LAMBDA_BUCKET=$DEV_LAMBDA_BUCKET" >> $GITHUB_ENV
+          echo "TEST_LAMBDA_BUCKET=$TEST_LAMBDA_BUCKET" >> $GITHUB_ENV
+          echo "PROD_LAMBDA_BUCKET=$PROD_LAMBDA_BUCKET" >> $GITHUB_ENV
 
           cat > ${{ env.ENVIRONMENT }}.hcl <<EOF
           bucket         = "$STATE_BUCKET"
@@ -218,8 +224,15 @@ jobs:
 
       # Apply terraform changes to build infrastructure using tfvars for environment
       - name: Terraform Apply
-        run: terraform apply -var="environment=${{ env.ENVIRONMENT }}" -var="aws_account_id=${{ vars.AWS_ACCOUNT_ID }}" -auto-approve -lock=false
-
+        run: terraform apply \
+          -var="environment=${{ env.ENVIRONMENT }}" \
+          -var="aws_account_id=${{ vars.AWS_ACCOUNT_ID }}" \
+          -var="environment=${{ env.ENVIRONMENT }}" \
+          -var="aws_account_id=${{ vars.AWS_ACCOUNT_ID }}" \
+          -var="lambda_code_bucket_dev=${{ env.DEV_LAMBDA_BUCKET }}" \
+          -var="lambda_code_bucket_test=${{ env.TEST_LAMBDA_BUCKET }}" \
+          -var="lambda_code_bucket_prod=${{ env.PROD_LAMBDA_BUCKET }}" \
+          -out=tfplan -lock=false
       # Export Terraform outputs to JSON file
       - name: Export Outputs
         run: terraform output -json > tf_outputs.json
