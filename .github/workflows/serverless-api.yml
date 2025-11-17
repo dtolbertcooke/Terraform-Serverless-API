@@ -200,6 +200,7 @@ jobs:
           TEST_LAMBDA_BUCKET=$(aws ssm get-parameter --name "/tf/global-backend/lambda-code-bucket-test" --query "Parameter.Value" --output text)
           PROD_LAMBDA_BUCKET=$(aws ssm get-parameter --name "/tf/global-backend/lambda-code-bucket-prod" --query "Parameter.Value" --output text)
 
+          echo "TF_VAR_state_bucket_name=$STATE_BUCKET" >> $GITHUB_ENV
           echo "DEV_LAMBDA_BUCKET=$DEV_LAMBDA_BUCKET" >> $GITHUB_ENV
           echo "TEST_LAMBDA_BUCKET=$TEST_LAMBDA_BUCKET" >> $GITHUB_ENV
           echo "PROD_LAMBDA_BUCKET=$PROD_LAMBDA_BUCKET" >> $GITHUB_ENV
